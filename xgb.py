@@ -25,7 +25,7 @@ param = {
     # 'gamma': 1,
     # 'lambda': 5,
     # 'alpha': 2,
-    'min_child_weight': 100,
+    # 'min_child_weight': 100,
     # 'max_depth': 3,
     # 'eta': 5,
     'objective':'binary:logistic',
