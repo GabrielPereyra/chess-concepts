@@ -2,6 +2,7 @@ import chess
 import chess.svg
 import itertools
 import pandas as pd
+S3_PATH = 's3://chess-puzzles/single-best-mate/{year}-{month:0>2}/{shard}.csv'
 
 
 def fen_to_svg(fen, move):
@@ -49,13 +50,11 @@ def df_to_table(df, columns=[]):
 
 
 def get_df(years, months, shards=None):
-    PATH = '../chess-tables/csvs/single-best-mate/{year}-{month:0>2}/{shard}.csv'
-
     dfs = []
     for year in years:
         for month in months:
             for shard in itertools.count():
-                path = PATH.format(year=year, month=month, shard=shard)
+                path = S3_PATH.format(year=year, month=month, shard=shard)
                 try:
                     df = pd.read_csv(path)
                     print(path)

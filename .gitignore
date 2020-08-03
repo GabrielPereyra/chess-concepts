@@ -1,0 +1,7 @@
+.ipynb_checkpoints
+__pycache__
+csvs
+*.pyc
+.pytest_cache
+chess_features.egg-info
+venv

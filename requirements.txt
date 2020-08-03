@@ -1,0 +1,6 @@
+python-chess
+pandas
+click
+scikit-learn
+pytest
+s3fs
