@@ -57,11 +57,11 @@ def model(feature_set_list):
     Train dummy and logistic regression models to predict probability of a blunder on positions where there is a single best mate. Uses csvs/data,csv as input (need to generate this using cli csv first).
     """
 
-    df = pd.read_csv('data.csv')
+    df = pd.read_csv('csvs/data.csv')
 
     columns = []
     for feature_set in feature_set_list:
-        columns.extend(getattr(feature_sets, feature_set))
+        columns.extend(feature_sets[feature_set])
 
     x = df[columns].values
     y = df['correct']
@@ -79,37 +79,6 @@ def model(feature_set_list):
     for model in models:
         score = model.fit(x_train, y_train).score(x_test, y_test)
         print('{:.0%}'.format(score))
-
-
-@cli.command()
-def difficulty():
-    """
-    Train a model to predict blunders and add this to csvs/data.csv as a feature column.
-    """
-
-    df = pd.read_csv('data.csv')
-
-    columns = []
-    feature_set_list = ['base', 'board', 'piece_count']
-    for feature_set in feature_set_list:
-        columns.extend(getattr(feature_sets, feature_set))
-
-    x = df[columns].values
-    y = df['correct']
-
-    x = StandardScaler().fit_transform(x)
-
-    model = LogisticRegression().fit(x, y)
-
-    test_df = df.copy()
-    test_df['elo'] = df['elo'].mean()
-    x = df[columns].values
-    x = StandardScaler().fit_transform(x)
-
-    difficulty = model.predict_proba(x)[:, 0]
-    df['difficulty'] = difficulty
-
-    df.to_csv('data.csv', index=False)
 
 
 if __name__ == '__main__':

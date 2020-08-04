@@ -6,17 +6,6 @@ from functools import cached_property
 STOCKFISH_PATH = '../Stockfish/src/stockfish'
 
 
-# TODO: queen support by a piece
-# TODO: single piece (number of pieces involved)
-# TODO: best move is safe check
-# TODO: best move is capture hanging
-
-# TODO: best move is sacrifice (captures defended lower value piece).
-
-# TODO: battery (queen support by bishop, rook in king ring.)
-
-# TODO: is back rank mate (only attacked by queen or rook)
-
 def _is_feature(attr):
     return (
         not attr.startswith('__') and
@@ -25,7 +14,6 @@ def _is_feature(attr):
     )
 
 
-# TODO: make this inherit from dict?
 class Features:
 
     @classmethod
@@ -38,14 +26,12 @@ class Features:
                 feature_dict[feature_name] = getattr(self, feature_name)
         return feature_dict
 
-    # TODO: how to handle tuple and row? dict on tuple?
     @classmethod
     def from_row(cls, row):
         return cls(row.fen)
 
     @classmethod
     def from_df(cls, df):
-        # TODO: put click in here...
         feature_rows = []
         with click.progressbar(tuple(df.itertuples())) as rows:
             for row in rows:
@@ -59,7 +45,6 @@ class Board(Features):
     def __init__(self, fen):
         self.board = chess.Board(fen)
         self.moves = tuple(self.board.legal_moves)
-
         self.their_board = self.board.copy()
         self.their_board.push(chess.Move.null())
         self.their_moves = tuple(self.their_board.legal_moves)
@@ -89,7 +74,6 @@ class Board(Features):
             self.board.pop()
         return count
 
-    # TODO: redundent with number of pieces attacked.
     @cached_property
     def our_number_of_captures(self):
         count = 0
@@ -97,8 +81,6 @@ class Board(Features):
             count += self.board.is_capture(move)
         return count
 
-    # TODO: probably move this to pieces?
-    # TODO: this is different than attack mask...
     @cached_property
     def our_number_of_queen_moves(self):
         count = 0
@@ -483,162 +465,6 @@ class BestPV(Features):
     def best_pv_their_number_of_pieces_moved(self):
         return self._number_of_pieces_moved(self.board, self.pv, not self.board.turn)
 
-
-class Checkmate(Features):
-
-    def __init__(self, fen, pv):
-        self.board = chess.Board(fen)
-        self.our_color = self.board.turn
-        self.their_color = not self.board.turn
-
-        self.pv = [chess.Move.from_uci(move) for move in eval(pv)]
-        for move in self.pv:
-            self.board.push(move)
-
-        if not self.board.is_checkmate():
-            print('wtf')
-
-    @classmethod
-    def from_row(cls, row):
-        return cls(row.fen, row.best_pv)
-
-    @cached_property
-    def _their_king_ring_mask(self):
-        their_king = self.board.king(self.their_color)
-        return self.board.attacks_mask(their_king)
-
-    @cached_property
-    def _their_king_ring_and_king_mask(self):
-        their_king_mask = self.board.occupied_co[self.their_color] & self.board.kings
-        return their_king_mask | self._their_king_ring_mask
-
-    @cached_property
-    def num_our_pieces_attacking_their_king_ring(self):
-        count = 0
-        for piece in chess.scan_reversed(self.board.occupied_co[self.our_color]):
-            piece_attacks_mask = self.board.attacks_mask(piece)
-            count += bool(self._their_king_ring_and_king_mask & piece_attacks_mask)
-        return count
-
-    @cached_property
-    def our_king_is_attacking_their_king_and_ring(self):
-        our_king = self.board.king(self.our_color)
-        their_king = self.board.king(self.their_color)
-        return chess.square_distance(our_king, their_king) == 2
-
-    @cached_property
-    def num_our_queens_attacking_their_king_and_ring(self):
-        count = 0
-        for piece in self.board.pieces(chess.QUEEN, self.our_color):
-            piece_attacks_mask = self.board.attacks_mask(piece)
-            count += bool(self._their_king_ring_and_king_mask & piece_attacks_mask)
-        return count
-
-    @cached_property
-    def num_our_rooks_attacking_their_king_and_ring(self):
-        count = 0
-        for piece in self.board.pieces(chess.ROOK, self.our_color):
-            piece_attacks_mask = self.board.attacks_mask(piece)
-            count += bool(self._their_king_ring_and_king_mask & piece_attacks_mask)
-        return count
-
-    @cached_property
-    def num_our_bishops_attacking_their_king_and_ring(self):
-        count = 0
-        for piece in self.board.pieces(chess.BISHOP, self.our_color):
-            piece_attacks_mask = self.board.attacks_mask(piece)
-            count += bool(self._their_king_ring_and_king_mask & piece_attacks_mask)
-        return count
-
-    @cached_property
-    def num_our_knights_attacking_their_king_and_ring(self):
-        count = 0
-        for piece in self.board.pieces(chess.KNIGHT, self.our_color):
-            piece_attacks_mask = self.board.attacks_mask(piece)
-            count += bool(self._their_king_ring_and_king_mask & piece_attacks_mask)
-        return count
-
-    @cached_property
-    def num_our_pawns_attacking_their_king_and_ring(self):
-        count = 0
-        for piece in self.board.pieces(chess.PAWN, self.our_color):
-            piece_attacks_mask = self.board.attacks_mask(piece)
-            count += bool(self._their_king_ring_and_king_mask & piece_attacks_mask)
-        return count
-
-
-
-    @cached_property
-    def checkmate_piece_type(self):
-        move = self.pv[-1]
-        return self.board.piece_type_at(move.to_square)
-
-    @cached_property
-    def checkmate_move_rank(self):
-        board = self.board.copy()
-        if board.turn == chess.BLACK:
-            board = board.mirror()
-        return chess.square_rank(self.pv[-1].to_square)
-
-
-    @cached_property
-    def their_king_rank(self):
-        board = self.board.copy()
-        if not board.turn:
-            board = board.mirror()
-        return chess.square_rank(board.king(not board.turn))
-
-    @cached_property
-    def their_king_file(self):
-        board = self.board.copy()
-        if not board.turn:
-            board = board.mirror()
-        return chess.square_file(board.king(not board.turn))
-
-    @cached_property
-    def their_king_is_back_rank(self):
-        return self.their_king_rank == 7
-
-    @cached_property
-    def their_num_pieces_in_king_ring(self):
-        their_pieces_mask = self.board.occupied_co[self.their_color]
-        return chess.popcount(self._their_king_ring_mask & their_pieces_mask)
-
-    @cached_property
-    def our_num_pieces_in_king_ring(self):
-        our_pieces_mask = self.board.occupied_co[self.our_color]
-        return chess.popcount(self._their_king_ring_mask & our_pieces_mask)
-
-    @cached_property
-    def their_king_ring_size(self):
-        return chess.popcount(self._their_king_ring_mask)
-
-
-
-
-
-    @cached_property
-    def is_back_rank_mate(self):
-        return (
-            self.checkmate_move_rank == 7 and
-            self.their_king_is_back_rank and
-            self.num_our_pieces_attacking_their_king_ring == 1
-        )
-
-
-    @cached_property
-    def is_box_mate(self):
-        return (
-            self.our_king_is_attacking_their_king_and_ring and
-            self.num_our_pieces_attacking_their_king_ring == 2
-        )
-
-
-    # @cached_property
-    # def our_pieces_attacking_their_king_ring(self:)
-
-
-
     # @cached_property
     # def best_move_is_captured(self):
     #     if len(self.pv) == 1: return False
@@ -870,6 +696,149 @@ class Checkmate(Features):
     #     return hanging_pieces(board, not board.turn)
 
 
+class Checkmate(Features):
+
+    def __init__(self, fen, pv):
+        self.board = chess.Board(fen)
+        self.our_color = self.board.turn
+        self.their_color = not self.board.turn
+
+        self.pv = [chess.Move.from_uci(move) for move in eval(pv)]
+        for move in self.pv:
+            self.board.push(move)
+
+        if not self.board.is_checkmate():
+            print('wtf')
+
+    @classmethod
+    def from_row(cls, row):
+        return cls(row.fen, row.best_pv)
+
+    @cached_property
+    def _their_king_ring_mask(self):
+        their_king = self.board.king(self.their_color)
+        return self.board.attacks_mask(their_king)
+
+    @cached_property
+    def _their_king_ring_and_king_mask(self):
+        their_king_mask = self.board.occupied_co[self.their_color] & self.board.kings
+        return their_king_mask | self._their_king_ring_mask
+
+    @cached_property
+    def num_our_pieces_attacking_their_king_ring(self):
+        count = 0
+        for piece in chess.scan_reversed(self.board.occupied_co[self.our_color]):
+            piece_attacks_mask = self.board.attacks_mask(piece)
+            count += bool(self._their_king_ring_and_king_mask & piece_attacks_mask)
+        return count
+
+    @cached_property
+    def our_king_is_attacking_their_king_and_ring(self):
+        our_king = self.board.king(self.our_color)
+        their_king = self.board.king(self.their_color)
+        return chess.square_distance(our_king, their_king) == 2
+
+    @cached_property
+    def num_our_queens_attacking_their_king_and_ring(self):
+        count = 0
+        for piece in self.board.pieces(chess.QUEEN, self.our_color):
+            piece_attacks_mask = self.board.attacks_mask(piece)
+            count += bool(self._their_king_ring_and_king_mask & piece_attacks_mask)
+        return count
+
+    @cached_property
+    def num_our_rooks_attacking_their_king_and_ring(self):
+        count = 0
+        for piece in self.board.pieces(chess.ROOK, self.our_color):
+            piece_attacks_mask = self.board.attacks_mask(piece)
+            count += bool(self._their_king_ring_and_king_mask & piece_attacks_mask)
+        return count
+
+    @cached_property
+    def num_our_bishops_attacking_their_king_and_ring(self):
+        count = 0
+        for piece in self.board.pieces(chess.BISHOP, self.our_color):
+            piece_attacks_mask = self.board.attacks_mask(piece)
+            count += bool(self._their_king_ring_and_king_mask & piece_attacks_mask)
+        return count
+
+    @cached_property
+    def num_our_knights_attacking_their_king_and_ring(self):
+        count = 0
+        for piece in self.board.pieces(chess.KNIGHT, self.our_color):
+            piece_attacks_mask = self.board.attacks_mask(piece)
+            count += bool(self._their_king_ring_and_king_mask & piece_attacks_mask)
+        return count
+
+    @cached_property
+    def num_our_pawns_attacking_their_king_and_ring(self):
+        count = 0
+        for piece in self.board.pieces(chess.PAWN, self.our_color):
+            piece_attacks_mask = self.board.attacks_mask(piece)
+            count += bool(self._their_king_ring_and_king_mask & piece_attacks_mask)
+        return count
+
+    @cached_property
+    def checkmate_piece_type(self):
+        move = self.pv[-1]
+        return self.board.piece_type_at(move.to_square)
+
+    @cached_property
+    def checkmate_move_rank(self):
+        board = self.board.copy()
+        if board.turn == chess.BLACK:
+            board = board.mirror()
+        return chess.square_rank(self.pv[-1].to_square)
+
+
+    @cached_property
+    def their_king_rank(self):
+        board = self.board.copy()
+        if not board.turn:
+            board = board.mirror()
+        return chess.square_rank(board.king(not board.turn))
+
+    @cached_property
+    def their_king_file(self):
+        board = self.board.copy()
+        if not board.turn:
+            board = board.mirror()
+        return chess.square_file(board.king(not board.turn))
+
+    @cached_property
+    def their_king_is_back_rank(self):
+        return self.their_king_rank == 7
+
+    @cached_property
+    def their_num_pieces_in_king_ring(self):
+        their_pieces_mask = self.board.occupied_co[self.their_color]
+        return chess.popcount(self._their_king_ring_mask & their_pieces_mask)
+
+    @cached_property
+    def our_num_pieces_in_king_ring(self):
+        our_pieces_mask = self.board.occupied_co[self.our_color]
+        return chess.popcount(self._their_king_ring_mask & our_pieces_mask)
+
+    @cached_property
+    def their_king_ring_size(self):
+        return chess.popcount(self._their_king_ring_mask)
+
+    @cached_property
+    def is_back_rank_mate(self):
+        return (
+            self.checkmate_move_rank == 7 and
+            self.their_king_is_back_rank and
+            self.num_our_pieces_attacking_their_king_ring == 1
+        )
+
+    @cached_property
+    def is_box_mate(self):
+        return (
+            self.our_king_is_attacking_their_king_and_ring and
+            self.num_our_pieces_attacking_their_king_ring == 2
+        )
+
+
 def is_higher_value(a, b):
     piece_type_to_value = {
         None: 0,
@@ -992,41 +961,3 @@ class StockfishFeatures():
             if len(pv) > 1:
                 moves.append(pv[1])
         return len(set(moves)) / len(moves)
-
-
-# TODO: how to put this into class? From row...
-def get_features(row, cls, engine=None):
-    if cls == MateIn1Features:
-        instance = cls(row.fen, row.best_pv)
-    elif cls == StockfishFeatures:
-        instance = cls(row.fen, engine)
-    elif cls == MoveFeatures:
-        instance = cls(row.fen, row.best_move)
-    elif cls == Features:
-        instance = cls(row.fen, row.best_pv)
-    else:
-        instance = cls(row.fen)
-    features = {}
-    for feature_name in class_features(cls):
-        features[feature_name] = getattr(instance, feature_name)
-    return features
-
-
-def get_df(df, feature_classes, include_columns=[]):
-    engine = chess.engine.SimpleEngine.popen_uci(STOCKFISH_PATH)
-
-    feature_dfs = []
-    for cls in feature_classes:
-        if cls == StockfishFeatures:
-            feature_df = df.progress_apply(get_features, cls=cls, engine=engine, result_type='expand', axis=1)
-        else:
-            feature_df = df.progress_apply(get_features, cls=cls, result_type='expand', axis=1)
-        feature_dfs.append(feature_df)
-    feature_df = pd.concat(feature_dfs, axis=1)
-
-    for column in include_columns:
-        feature_df[column] = df[column]
-
-    engine.quit()
-
-    return feature_df

@@ -20,12 +20,7 @@ def test_best_move_features():
 
 def test_best_pv_features():
     f = features.BestPV(chess.STARTING_FEN, "['e2e4', 'e7e5', 'g1f3', 'b8c6', 'f1b5', 'a7a6', 'b5c6', 'd7c6']")
-    assert f.features() == {'our_number_of_captures': 1, 'our_number_of_checks': 0, 'our_number_of_pieces_moved': 3, 'their_number_of_captures': 1, 'their_number_of_checks': 0, 'their_number_of_pieces_moved': 4}
-
-
-def test_their_king_features():
-    f = features.TheirKing(chess.STARTING_FEN)
-    print(f.features())
+    assert f.features() == {'best_pv_our_number_of_captures': 1, 'best_pv_our_number_of_checks': 0, 'best_pv_our_number_of_pieces_moved': 3, 'best_pv_their_number_of_captures': 1, 'best_pv_their_number_of_checks': 0, 'best_pv_their_number_of_pieces_moved': 4}
 
 
 def test_from_df():
@@ -37,4 +32,3 @@ def test_from_df():
 
     for feature_class in [features.Board, features.PieceCount, features.BestMove, features.BestPV]:
         feature_df = feature_class.from_df(df)
-        print(feature_df)

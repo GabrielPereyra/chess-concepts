@@ -12,7 +12,6 @@ virtualenv venv
 . venv/bin/activate
 pip install -r requirements.txt
 pip install --editable .
-
 ```
 
 # Command line
@@ -22,7 +21,7 @@ pip install --editable .
 cli
 
 # generate features table using lichess 2013-01 data.
-cli csv 2013 1
+cli csv 2013 1 Board PieceCount BestMove BestPV Checkmate
 
 # train a model to predict blunders using csv data.
 cli model
@@ -34,7 +33,7 @@ cli difficulty
 
 | Notebook | Description |
 |--------- | ----------- |
-| [boards](./notebooks/boards.ipynb) | Visualize boards based on features. |
+| [boards](./widgets/boards.ipynb) | Visualize boards based on features. |
 
 # Todo
 
