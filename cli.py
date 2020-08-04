@@ -1,13 +1,16 @@
+import os
 import utils
 import click
 import features
 import pandas as pd
+import plotly.express as px
 
 # TODO: move this to model file?
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from sklearn.dummy import DummyClassifier
 from sklearn.linear_model import LogisticRegression
+os.makedirs('csvs', exist_ok=True)
 
 
 feature_sets = {
@@ -79,6 +82,37 @@ def model(feature_set_list):
     for model in models:
         score = model.fit(x_train, y_train).score(x_test, y_test)
         print('{:.0%}'.format(score))
+
+
+@cli.command()
+@click.argument('feature')
+@click.option('--elo_bin', default=200)
+def plot(feature, elo_bin):
+    """
+    Create a plotly plot of feature vs. accuracy by elo. Assumes you have created csvs/data.csv and the feature exists as a column.
+    """
+
+    df = pd.read_csv('csvs/data.csv')
+
+    # TODO: generalize this to remove feature values with low counts.
+    if feature == 'best_mate':
+        df = df[df[feature] < 10]
+
+    df = df[df['elo'] > 800]
+    df = df[df['elo'] < 2200]
+
+
+    df['elo'] = df['elo'].apply(lambda elo: int(elo / elo_bin) * elo_bin)
+    df = df.groupby([feature, 'elo'], as_index=False).mean()
+
+    fig = px.line(
+        df,
+        x='elo',
+        y='correct',
+        color=feature
+    )
+
+    fig.show()
 
 
 if __name__ == '__main__':

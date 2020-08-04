@@ -26,8 +26,8 @@ cli csv 2013 1 Board PieceCount BestMove BestPV Checkmate
 # train a model to predict blunders using csv data.
 cli model
 
-# add difficulty feature to data (model blunder prediction).
-cli difficulty
+# plot elo vs. accuracy by mate depth.
+cli plot best_mate
 ```
 # Notebooks
 

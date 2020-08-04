@@ -4,3 +4,4 @@ click
 scikit-learn
 pytest
 s3fs
+plotly
