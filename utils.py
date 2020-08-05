@@ -1,3 +1,4 @@
+import math
 import chess
 import chess.pgn
 import chess.engine
@@ -67,6 +68,40 @@ def metrics(score, prev_score, turn):
     }
 
 
+def winning_chances(score, prev_score, turn):
+    if prev_score is None: return {}
+    score = score.pov(turn)
+    prev_score = prev_score.pov(turn)
+
+    def score_to_winning_chances(score):
+        if score.is_mate():
+            cp = (21 - min(10, abs(score.mate()))) * 100
+            cp *= 1 if score.mate() > 0 else -1
+        else:
+            cp = min(max(-1000, score.cp), 1000)
+        return 2 / (1 + math.exp(-0.004 * cp)) - 1
+
+    winning_chances = score_to_winning_chances(score)
+    prev_winning_chances = score_to_winning_chances(prev_score)
+    winning_chances_loss = -(winning_chances - prev_winning_chances) / 2
+
+    if winning_chances_loss < 0.025:
+        error_classification = 'correct'
+    elif winning_chances_loss < 0.06:
+        error_classification = 'inaccuracy'
+    elif winning_chances_loss < 0.14:
+        error_classification = 'mistake'
+    else:
+        error_classification = 'blunder'
+
+    return {
+        'winning_chances': winning_chances,
+        'prev_winning_chances': prev_winning_chances,
+        'winning_chances_loss': winning_chances_loss,
+        'error_classification': error_classification
+    }
+
+
 def user_df(pgn_path):
     pgn = open(pgn_path)
 
@@ -109,7 +144,13 @@ def user_df(pgn_path):
                 'clock': node.clock(),
             }
 
+            verdict = winning_chances(score, prev_score, board.turn)
             row.update(metrics(score, prev_score, board.turn))
+
+            print('{:>10}{:>10}{:>10}{:>10}{:>10}{:>10}{:>10}'.format(
+                str(score), str(prev_score), str(row['score_loss']), str(row['mate_loss']), str(row['into_mate']), str(row['lost_mate']), str(verdict)
+            ))
+
             rows.append(row)
             board.push(move)
 
