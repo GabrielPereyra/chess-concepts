@@ -12,6 +12,7 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.dummy import DummyClassifier
 from sklearn.linear_model import LogisticRegression
 os.makedirs('csvs', exist_ok=True)
+os.makedirs('pgns', exist_ok=True)
 
 
 feature_sets = {
@@ -120,13 +121,21 @@ def plot(feature, elo_bin):
 
 @cli.command()
 @click.argument('username')
-def download_user_games(username):
+def user_pgn(username):
     """Download {username} games from lichess.org. Note: we only download games that have been analyzed."""
-    r = requests.get('https://lichess.org/api/games/user/{username}?analysed=1&evals=1'.format(username=username))
+    r = requests.get('https://lichess.org/api/games/user/{username}?analysed=1&evals=1&perfType=ultraBullet,bullet,blitz,rapid,classical&clocks=1&opening=1'.format(username=username))
 
-    os.makedirs('pgns', exist_ok=True)
     with open('pgns/{}.pgn'.format(username), 'w') as f:
         f.write(r.text)
+
+
+@cli.command()
+@click.argument('username')
+def user_csv(username):
+    """Convert lichess user pgn to csv."""
+    pgn_path = 'pgns/{}.pgn'.format(username)
+    df = utils.user_df(pgn_path)
+    df.to_csv('csvs/{}.csv'.format(username))
 
 
 if __name__ == '__main__':
