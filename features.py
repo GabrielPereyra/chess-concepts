@@ -290,6 +290,26 @@ class BestMove(Features):
     def best_move_is_attacked(self):
         return self.board.is_attacked_by(not self.board.turn, self.move.to_square)
 
+    @cached_property
+    def best_move_is_horizontal(self):
+        from_rank = chess.square_rank(self.move.from_square)
+        to_rank = chess.square_rank(self.move.to_square)
+        return from_rank == to_rank
+
+    @cached_property
+    def best_move_is_forward(self):
+        """From the perspective of the current player, i.e. current player's pawns move up the board."""
+        from_rank = chess.square_rank(self.move.from_square)
+        to_rank = chess.square_rank(self.move.to_square)
+        if self.board.turn == chess.WHITE:
+            return from_rank < to_rank
+        return from_rank > to_rank
+
+    @cached_property
+    def best_move_is_backward(self):
+        """From the perspective of the current player, i.e. current player's pawns move up the board."""
+        return not self.best_move_is_horizontal and not self.best_move_is_forward
+
     # @cached_property
     # def best_move_was_defended(self):
     #     return self.board.is_attacked_by(self.board.turn, self.move.from_square)
