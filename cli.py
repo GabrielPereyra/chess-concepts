@@ -30,6 +30,21 @@ def cli():
 
 
 @cli.command()
+@click.option('--group', default=None)
+def print_features(group):
+    """
+    Prints available feature names.
+
+    group: name of the group of features to print (e.g. board, or None to print features for all feature groups)
+    """
+    for group_name, feature_names in feature_sets.items():
+        if group is None or group_name == group:
+            print('{}:'.format(group_name))
+            for feature_name in feature_names:
+                print('\t{}'.format(feature_name))
+
+
+@cli.command()
 @click.argument('years')
 @click.argument('months')
 @click.argument('feature_names', nargs=-1)
