@@ -134,23 +134,35 @@ def plot(feature, elo_bin):
     fig.show()
 
 
+# TODO: refactor this to use lichess pgn code.
+# @cli.command()
+# @click.argument('username')
+# def user_pgn(username):
+#     """Download {username} games from lichess.org. Note: we only download games that have been analyzed."""
+#     r = requests.get('https://lichess.org/api/games/user/{username}?analysed=1&evals=1&perfType=ultraBullet,bullet,blitz,rapid,classical&clocks=1&opening=1'.format(username=username))
+#
+#     with open('pgns/{}.pgn'.format(username), 'w') as f:
+#         f.write(r.text)
+#
+#
+# @cli.command()
+# @click.argument('username')
+# def user_csv(username):
+#     """Convert lichess user pgn to csv."""
+#     pgn_path = 'pgns/{}.pgn'.format(username)
+#     df = utils.pgn_to_df(pgn_path)
+#     df.to_csv('csvs/{}.csv'.format(username))
+
+
+# TODO: command to download lichess pgn.
+
+
 @cli.command()
-@click.argument('username')
-def user_pgn(username):
-    """Download {username} games from lichess.org. Note: we only download games that have been analyzed."""
-    r = requests.get('https://lichess.org/api/games/user/{username}?analysed=1&evals=1&perfType=ultraBullet,bullet,blitz,rapid,classical&clocks=1&opening=1'.format(username=username))
-
-    with open('pgns/{}.pgn'.format(username), 'w') as f:
-        f.write(r.text)
-
-
-@cli.command()
-@click.argument('username')
-def user_csv(username):
-    """Convert lichess user pgn to csv."""
-    pgn_path = 'pgns/{}.pgn'.format(username)
-    df = utils.user_df(pgn_path)
-    df.to_csv('csvs/{}.csv'.format(username))
+@click.argument('year', type=int)
+@click.argument('month', type=int)
+def lichess_csv(year, month):
+    """Convert lichess month pgn to csv. Expects a pgn file in the pgns/ dir formatted lichess_db_standard_rated_{year}-{month}.pgn. You can download these from https://database.lichess.org/."""
+    utils.lichess_month_pgn_to_csv(year, month)
 
 
 if __name__ == '__main__':
