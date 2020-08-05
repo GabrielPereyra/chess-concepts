@@ -4,6 +4,7 @@ import click
 import features
 import pandas as pd
 import plotly.express as px
+import requests
 
 # TODO: move this to model file?
 from sklearn.model_selection import train_test_split
@@ -62,6 +63,8 @@ def model(feature_set_list):
 
     df = pd.read_csv('csvs/data.csv')
 
+    # TODO: move this into models.
+
     columns = []
     for feature_set in feature_set_list:
         columns.extend(feature_sets[feature_set])
@@ -113,6 +116,17 @@ def plot(feature, elo_bin):
     )
 
     fig.show()
+
+
+@cli.command()
+@click.argument('username')
+def download_user_games(username):
+    """Download {username} games from lichess.org. Note: we only download games that have been analyzed."""
+    r = requests.get('https://lichess.org/api/games/user/{username}?analysed=1&evals=1'.format(username=username))
+
+    os.makedirs('pgns', exist_ok=True)
+    with open('pgns/{}.pgn'.format(username), 'w') as f:
+        f.write(r.text)
 
 
 if __name__ == '__main__':
