@@ -1,6 +1,8 @@
 import click
 import chess
 import chess.engine
+from chess import WHITE, BLACK
+from chess.engine import PovScore, Cp, Mate
 import pandas as pd
 from functools import cached_property
 STOCKFISH_PATH = '../Stockfish/src/stockfish'
@@ -233,12 +235,12 @@ class PieceCount(Features):
     @cached_property
     def material_advantage(self):
         return (
-            self.our_queens * 8 +
+            self.our_queens * 9 +
             self.our_rooks * 5 +
             self.our_bishops * 3 +
             self.our_knights * 3 +
             self.our_pawns -
-            self.their_queens * 8 -
+            self.their_queens * 9 -
             self.their_rooks * 5 -
             self.their_bishops * 3 -
             self.their_knights * 3 -
@@ -686,10 +688,6 @@ class BestPV(Features):
     #         return all(queen_moves_are_attacked)
 
     # @cached_property
-    # def hanging_pieces(self):
-    #     return hanging_pieces(self.board, self.board.turn)
-    #
-    # @cached_property
     # def pv0_hanging_pieces(self):
     #     board = self.board.copy()
     #     board.push(self.pv[0])
@@ -862,6 +860,7 @@ def is_attacked_by_lower_value(board, color, square):
     return False
 
 
+# TODO: how to merge all of these?
 def attacks_on_higher_value_pieces(board, color):
     pieces_mask = board.occupied_co[not color]
 
@@ -882,50 +881,28 @@ def hanging_pieces(board, color):
     return hanging_pieces
 
 
-class ThreatFeatures():
+def is_attacked_by_piece_type(board, color, square, piece_type):
+    for attacker in board.attackers(color, square):
+        if board.piece_type_at(attacker) == piece_type:
+            return True
+    return False
 
-    def __init__(self, fen):
-        self.board = chess.Board(fen)
 
-    def minors_attacking_majors(self):
-        their_color = not self.board.turn
-        their_queen_mask = self.board.pieces_mask(chess.QUEEN, their_color)
-        their_rook_mask = self.board.pieces_mask(chess.ROOK, their_color)
-        their_major_mask = their_queen_mask | their_rook_mask
 
-        def square_is_attacked_by_minor(color, square):
-            for attacker in self.board.attackers(color, square):
-                attacker_piece_type = self.board.piece_type_at(attacker)
-                if attacker_piece_type in [chess.KNIGHT, chess.BISHOP]:
-                    return True
-            return False
-
-        count = 0
-        for major in chess.scan_forward(their_major_mask):
-            count += square_is_attacked_by_minor(self.board.turn, major)
-        return count
-
-    def higher_value_pieces_attacked(self):
-        board = self.board.copy()
-        our_color = board.turn
-        their_color = not board.turn
-        their_pieces = board.occupied_co[their_color]
-        their_non_pawns = their_pieces & ~board.pawns
-
-        def square_is_attacked_by_lower_value(color, square):
-            attacked_piece_type = board.piece_type_at(square)
-            for attacker in board.attackers(color, square):
-                attacker_piece_type = board.piece_type_at(attacker)
-                if (attacker_piece_type == chess.KNIGHT and  attacked_piece_type == chess.BISHOP):
-                    continue
-                if attacker_piece_type < attacked_piece_type:
-                    return True
-            return False
-
-        count = 0
-        for square in chess.scan_forward(their_non_pawns):
-            count += square_is_attacked_by_lower_value(our_color, square)
-        return count
+def weak_pieces(board, color):
+    """Attacked pieces not defended by a pawn."""
+    pieces = board.occupied_co[color]
+    weak_pieces = 0
+    for piece in chess.scan_forward(pieces):
+        is_attacked = board.is_attacked_by(not color, piece)
+        is_defended_by_pawn = is_attacked_by_piece_type(
+            board,
+            color,
+            piece,
+            chess.PAWN,
+        )
+        weak_pieces += is_attacked and not is_defended_by_pawn
+    return weak_pieces
 
 
 def stockfish_info(engine, fen, move=None, depth=10, multipv=None):
@@ -961,3 +938,37 @@ class StockfishFeatures():
             if len(pv) > 1:
                 moves.append(pv[1])
         return len(set(moves)) / len(moves)
+
+
+# TODO: add stockfish eval function features...
+class Value(Features):
+    """Features should be correlated with stockfish score evaluation."""
+
+    def __init__(self, fen):
+        self.board = chess.Board(fen)
+
+    @cached_property
+    def our_hanging_pieces(self):
+        return hanging_pieces(self.board, self.board.turn)
+
+    @cached_property
+    def their_hanging_pieces(self):
+        return hanging_pieces(self.board, not self.board.turn)
+
+    @cached_property
+    def our_weak_pieces(self):
+        return weak_pieces(self.board, self.board.turn)
+
+    @cached_property
+    def their_weak_pieces(self):
+        return weak_pieces(self.board, not self.board.turn)
+
+    # TODO: control?
+
+    # @cached_property
+    # def our_attacks_on_higher_value_pieces(self):
+    #     return attacks_on_higher_value_pieces(self.board, self.board.turn)
+    #
+    # @cached_property
+    # def their_attacks_on_higher_value_pieces(self):
+    #     return attacks_on_higher_value_pieces(self.board, not self.board.turn)
