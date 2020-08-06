@@ -26,3 +26,10 @@ def test_boards():
     # TODO: this expects csvs to exists (need to ensure they do.).
     result = runner.invoke(cli, ['list'])
     assert result.exit_code == 0
+
+
+# TODO: prevent this from generating plot?
+def test_plot():
+    from cli.plot import cli
+    result = runner.invoke(cli, ['hist', '0', '0', '1', 'elo'])
+    assert result.exit_code == 0
