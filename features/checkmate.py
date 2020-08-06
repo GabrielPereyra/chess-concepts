@@ -99,7 +99,6 @@ class Checkmate(Features):
             board = board.mirror()
         return chess.square_rank(self.pv[-1].to_square)
 
-
     @cached_property
     def their_king_rank(self):
         board = self.board.copy()
@@ -146,3 +145,19 @@ class Checkmate(Features):
             self.our_king_is_attacking_their_king_and_ring and
             self.num_our_pieces_attacking_their_king_ring == 2
         )
+
+    @cached_property
+    def is_smothered_mate(self):
+        """
+        According to Wikipedia:
+        > In chess, a smothered mate is a checkmate delivered by a knight in which the mated king is unable to move
+        > because he is surrounded (or smothered) by his own pieces.
+        source: https://en.wikipedia.org/wiki/Smothered_mate
+        """
+
+        their_king = self.board.king(self.their_color)
+        for square in self.board.attacks(their_king):
+            piece = self.board.piece_at(square)
+            if piece is None or piece.color != self.their_color:
+                return False
+        return True

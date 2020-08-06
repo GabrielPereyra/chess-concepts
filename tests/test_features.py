@@ -23,6 +23,26 @@ def test_best_pv_features():
     assert f.features() == {'best_pv_our_number_of_captures': 1, 'best_pv_our_number_of_checks': 0, 'best_pv_our_number_of_pieces_moved': 3, 'best_pv_their_number_of_captures': 1, 'best_pv_their_number_of_checks': 0, 'best_pv_their_number_of_pieces_moved': 4}
 
 
+def test_smothered_mate_with_positive_example():
+    # from a famous game:
+    # https://www.chessgames.com/perl/chessgame?gid=1124489
+    fen = '4r1k1/2pRP1pp/2p5/p4pN1/5Qn1/q5P1/P3PP1P/6K1 w - - 0 1'
+    pv = "['f4c4', 'g8h8', 'g5f7', 'h8g8', 'f7h6', 'g8h8', 'c4g8', 'e8g8', 'h6f7']"
+
+    f = features.Checkmate(fen, pv)
+    assert f.features()['is_smothered_mate'] == 1
+
+
+def test_smothered_mate_with_negative_example():
+    # after a simple Greek gift sacrifice:
+    # https://lichess.org/analysis/rnbq1r1k/ppp1npp1/4p3/b2pP1N1/3P4/2P5/PP3PPP/RNBQK2R_w_KQ_-_0_1
+    fen = 'rnbq1r1k/ppp1npp1/4p3/b2pP1N1/3P4/2P5/PP3PPP/RNBQK2R w KQ - 2 9'
+    pv = "['d1h5', 'h8g8', 'h5h7']"
+
+    f = features.Checkmate(fen, pv)
+    assert f.features()['is_smothered_mate'] == 0
+
+
 def test_from_df():
     df = pd.DataFrame([{
         'fen': chess.STARTING_FEN,
