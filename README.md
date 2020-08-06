@@ -16,19 +16,27 @@ pip install --editable .
 
 # Command line
 
+Make sure to run `pip install --editable .`!
+
+## CSV
 ```
-# to see options
-cli
+# generate lichess csv from pgn (make sure to download lichess pgn from https://database.lichess.org/ and put it in pgns/)
+csv lichess year month
 
-# generate features table using lichess 2013-01 data.
-cli csv 2013 1 Board PieceCount BestMove BestPV Checkmate
-
-# train a model to predict blunders using csv data.
-cli model
-
-# plot elo vs. accuracy by mate depth.
-cli plot best_mate
+# generate feature csv from lichess csv (make sure to create lichess csv first.)
+csv feature year month feature_name
 ```
+
+## Features
+```
+# list features grouped by class.
+features list
+```
+
+## Plot / Model
+
+TODO: will fix these tomorrow.
+
 # Notebooks
 
 | Notebook | Description |
