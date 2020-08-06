@@ -43,6 +43,41 @@ def test_smothered_mate_with_negative_example():
     assert f.features()['is_smothered_mate'] == 0
 
 
+def test_back_rank_mate_for_white_with_positive_example():
+    # https://lichess.org/analysis/6k1/5ppp/8/8/8/8/5PPP/3R2K1_w_-_-_0_1
+    fen = '6k1/5ppp/8/8/8/8/5PPP/3R2K1 w - - 0 1'
+    pv = "['d1d8']"
+
+    f = features.Checkmate(fen, pv)
+    assert f.features()['is_back_rank_mate'] == 1
+
+
+def test_back_rank_mate_for_white_with_negative_example():
+    # https://lichess.org/analysis/8/1p2Q3/8/8/k1K5/8/8/8_w_-_-_0_1
+    fen = '8/1p2Q3/8/8/k1K5/8/8/8 w - - 0 1'
+    pv = "['e7b4']"
+
+    f = features.Checkmate(fen, pv)
+    assert f.features()['is_back_rank_mate'] == 0
+
+
+def test_back_rank_mate_for_black_with_positive_example():
+    # https://lichess.org/analysis/3r2k1/5ppp/8/8/8/8/5PPP/6K1_b_-_-_0_1
+    fen = '3r2k1/5ppp/8/8/8/8/5PPP/6K1 b - - 0 1'
+    pv = "['d8d1']"
+
+    f = features.Checkmate(fen, pv)
+    assert f.features()['is_back_rank_mate'] == 1
+
+
+def test_back_rank_mate_for_black_with_negative_example():
+    # https://lichess.org/analysis/8/1P2q3/8/8/K1k5/8/8/8_b_-_-_0_1
+    fen = '8/1P2q3/8/8/K1k5/8/8/8 b - - 0 1'
+    pv = "['e7b4']"
+    f = features.Checkmate(fen, pv)
+    assert f.features()['is_back_rank_mate'] == 0
+
+
 def test_from_df():
     df = pd.DataFrame([{
         'fen': chess.STARTING_FEN,
