@@ -1,5 +1,7 @@
 import os
 import pandas as pd
+LICHESS_CSV_PATH = 'csvs/lichess/{year}-{month:0>2}/'
+FEATURE_CSV_PATH = 'csvs/{feature_name}/{year}-{month:0>2}/'
 
 
 def get_df(years=[2013], months=[1], shards=None):
