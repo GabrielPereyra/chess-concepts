@@ -19,6 +19,7 @@ def get_type_df(type='lichess', years=[0], months=[0], shards=None):
     return pd.concat(dfs).reset_index(drop=True)
 
 
+# TODO: option to grab all types.
 def get_df(types=None, years=[0], months=[0], shards=None):
     df = None
     for type in types:

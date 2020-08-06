@@ -5,5 +5,6 @@ setup(
         [console_scripts]
         csv=cli.csv:cli
         features=cli.features:cli
+        boards=cli.boards:cli
     ''',
 )
