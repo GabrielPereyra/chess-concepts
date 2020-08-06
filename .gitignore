@@ -6,3 +6,4 @@ csvs
 chess_features.egg-info
 venv
 pgns
+.DS_Store

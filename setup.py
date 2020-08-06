@@ -3,6 +3,7 @@ setup(
     name='chess-features',
     entry_points='''
         [console_scripts]
-        cli=cli:cli
+        csv=cli.csv:cli
+        features=cli.features:cli
     ''',
 )

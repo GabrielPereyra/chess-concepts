@@ -1,0 +1,18 @@
+[Event "Rated Blitz tournament https://lichess.org/tournament/lKPZmPlw"]
+[Site "https://lichess.org/atzGIdb5"]
+[White "Jorgebing"]
+[Black "eliodoro"]
+[Result "1-0"]
+[UTCDate "2015.11.30"]
+[UTCTime "23:00:02"]
+[WhiteElo "1192"]
+[BlackElo "1253"]
+[WhiteRatingDiff "+17"]
+[BlackRatingDiff "-13"]
+[ECO "D06"]
+[Opening "Queen's Gambit Refused: Chigorin Defense, Modern Gambit"]
+[TimeControl "300+0"]
+[Termination "Normal"]
+
+1. d4 { [%eval 0.11] } 1... d5 { [%eval 0.13] } 2. c4 { [%eval 0.07] } 2... dxc4 { [%eval 0.44] } 3. Nf3 { [%eval 0.41] } 3... Nf6 { [%eval 0.47] } 4. Nc3 { [%eval 0.16] } 4... Nc6 { [%eval 0.52] } 5. a4? { [%eval -0.71] } 5... e6 { [%eval -0.34] } 6. e3 { [%eval -0.25] } 6... Bd6 { [%eval 0.0] } 7. Bxc4 { [%eval 0.05] } 7... Qe7 { [%eval 0.18] } 8. O-O { [%eval 0.19] } 8... Bd7? { [%eval 1.39] } 9. Re1? { [%eval 0.08] } 9... Nb8? { [%eval 2.57] } 10. e4 { [%eval 2.57] } 10... Qd8? { [%eval 4.41] } 11. e5 { [%eval 4.21] } 11... Be7 { [%eval 4.91] } 12. exf6 { [%eval 5.15] } 12... Bxf6 { [%eval 5.06] } 13. d5?! { [%eval 4.1] } 13... e5? { [%eval 5.4] } 14. Nxe5 { [%eval 5.33] } 14... Bxe5?? { [%eval 8.58] } 15. Rxe5+ { [%eval 8.39] } 15... Kf8 { [%eval 8.1] } 16. Qf3 { [%eval 8.49] } 16... f6? { [%eval 16.38] } 17. d6 { [%eval 10.15] } 17... Bc6 { [%eval 32.21] } 18. Ne4?? { [%eval 6.61] } 18... Qxd6?? { [%eval #9] } 19. Nxd6 { [%eval #7] } 19... Bxf3 { [%eval #1] } 20. Re8# 1-0
+
