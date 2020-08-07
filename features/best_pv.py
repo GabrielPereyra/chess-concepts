@@ -6,7 +6,6 @@ from features.abstract import Features
 
 
 class BestPV(Features):
-
     def __init__(self, fen, pv):
         self.board = chess.Board(fen)
         self.pv = [chess.Move.from_uci(move) for move in eval(pv)]
@@ -18,9 +17,9 @@ class BestPV(Features):
     @staticmethod
     def _number_of_captures(board, pv, color):
         count = 0
-        board = board.copy() # TODO: do we need to copy here?
+        board = board.copy()  # TODO: do we need to copy here?
         for move in pv:
-            count += (board.turn == color and board.is_capture(move))
+            count += board.turn == color and board.is_capture(move)
             board.push(move)
         return count
 
@@ -30,7 +29,7 @@ class BestPV(Features):
         board = board.copy()
         for move in pv:
             board.push(move)
-            count += (board.turn == color and board.is_check())
+            count += board.turn == color and board.is_check()
         return count
 
     @staticmethod

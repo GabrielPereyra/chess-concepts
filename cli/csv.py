@@ -7,16 +7,18 @@ import chess.engine
 import pandas as pd
 import datetime
 import features
-LICHESS_PGN_PATH = 'pgns/lichess_db_standard_rated_{year}-{month:0>2}.pgn'
-LICHESS_CSV_PATH = 'csvs/lichess/{year}-{month:0>2}/'
-FEATURE_CSV_PATH = 'csvs/{feature_name}/{year}-{month:0>2}/'
+
+LICHESS_PGN_PATH = "pgns/lichess_db_standard_rated_{year}-{month:0>2}.pgn"
+LICHESS_CSV_PATH = "csvs/lichess/{year}-{month:0>2}/"
+FEATURE_CSV_PATH = "csvs/{feature_name}/{year}-{month:0>2}/"
 SHARD_SIZE = 100000
-os.makedirs('csvs', exist_ok=True)
-os.makedirs('pgns', exist_ok=True)
+os.makedirs("csvs", exist_ok=True)
+os.makedirs("pgns", exist_ok=True)
 
 
 def metrics(score, prev_score, turn):
-    if prev_score is None: return {}
+    if prev_score is None:
+        return {}
     score = score.pov(turn)
     prev_score = prev_score.pov(turn)
 
@@ -54,15 +56,16 @@ def metrics(score, prev_score, turn):
                 score_loss = max(prev_score.score() - score.score(), 0)
 
     return {
-        'score_loss': score_loss,
-        'mate_loss': mate_loss,
-        'into_mate': into_mate,
-        'lost_mate': lost_mate,
+        "score_loss": score_loss,
+        "mate_loss": mate_loss,
+        "into_mate": into_mate,
+        "lost_mate": lost_mate,
     }
 
 
 def winning_chances(score, prev_score, turn):
-    if prev_score is None: return {}
+    if prev_score is None:
+        return {}
     score = score.pov(turn)
     prev_score = prev_score.pov(turn)
 
@@ -92,13 +95,13 @@ def winning_chances(score, prev_score, turn):
         is_blunder = True
 
     return {
-        'winning_chances': winning_chances,
-        'prev_winning_chances': prev_winning_chances,
-        'winning_chances_loss': winning_chances_loss,
-        'is_correct': is_correct,
-        'is_inaccurate': is_inaccurate,
-        'is_mistake': is_mistake,
-        'is_blunder': is_blunder,
+        "winning_chances": winning_chances,
+        "prev_winning_chances": prev_winning_chances,
+        "winning_chances_loss": winning_chances_loss,
+        "is_correct": is_correct,
+        "is_inaccurate": is_inaccurate,
+        "is_mistake": is_mistake,
+        "is_blunder": is_blunder,
     }
 
 
@@ -108,10 +111,12 @@ def game_to_rows(game):
     prev_score = chess.engine.PovScore(chess.engine.Cp(0), chess.WHITE)
     board = chess.Board()
     for node in game.mainline():
-        username = game.headers['White'] if board.turn else game.headers['Black']
-        elo = game.headers['WhiteElo'] if board.turn else game.headers['BlackElo']
-        datetime_string = game.headers['UTCDate'] + ' ' + game.headers['UTCTime']
-        datetime_parsed = datetime.datetime.strptime(datetime_string, '%Y.%m.%d %H:%M:%S')
+        username = game.headers["White"] if board.turn else game.headers["Black"]
+        elo = game.headers["WhiteElo"] if board.turn else game.headers["BlackElo"]
+        datetime_string = game.headers["UTCDate"] + " " + game.headers["UTCTime"]
+        datetime_parsed = datetime.datetime.strptime(
+            datetime_string, "%Y.%m.%d %H:%M:%S"
+        )
 
         move = node.move
         if node.board().is_checkmate():
@@ -124,21 +129,21 @@ def game_to_rows(game):
             return rows
 
         row = {
-            'elo': elo,
-            'username': username,
-            'datetime': datetime_parsed,
-            'opening': game.headers['Opening'],
-            'eco': game.headers['ECO'],
-            'game_id': game.headers['Site'].split('/')[-1],
-            'time_control': game.headers['TimeControl'],
-            'fen': board.fen(),
-            'move': move.uci(),
-            'prev_move': prev_move,
-            'score': score.pov(board.turn).score(),
-            'mate': score.pov(board.turn).mate(),
-            'prev_score': prev_score.pov(board.turn).score(),
-            'prev_mate': prev_score.pov(board.turn).mate(),
-            'clock': node.clock(),
+            "elo": elo,
+            "username": username,
+            "datetime": datetime_parsed,
+            "opening": game.headers["Opening"],
+            "eco": game.headers["ECO"],
+            "game_id": game.headers["Site"].split("/")[-1],
+            "time_control": game.headers["TimeControl"],
+            "fen": board.fen(),
+            "move": move.uci(),
+            "prev_move": prev_move,
+            "score": score.pov(board.turn).score(),
+            "mate": score.pov(board.turn).mate(),
+            "prev_score": prev_score.pov(board.turn).score(),
+            "prev_mate": prev_score.pov(board.turn).mate(),
+            "clock": node.clock(),
         }
 
         row.update(winning_chances(score, prev_score, board.turn))
@@ -154,8 +159,8 @@ def game_to_rows(game):
 
 def write_shard(rows, csv_path, shard):
     df = pd.DataFrame(rows)
-    df.to_csv(csv_path + str(shard) + '.csv', index=False)
-    print('wrote shard {}'.format(shard))
+    df.to_csv(csv_path + str(shard) + ".csv", index=False)
+    print("wrote shard {}".format(shard))
 
 
 def lichess_month_pgn_to_csv(year, month):
@@ -170,7 +175,8 @@ def lichess_month_pgn_to_csv(year, month):
     rows = []
     while True:
         game = chess.pgn.read_game(pgn)
-        if game is None: break
+        if game is None:
+            break
         games += 1
 
         mainline = tuple(game.mainline())
@@ -179,9 +185,12 @@ def lichess_month_pgn_to_csv(year, month):
 
         games_with_eval += 1
 
-        if game is None: break
-        if game.headers['WhiteElo'] == '?': continue
-        if game.headers['BlackElo'] == '?': continue
+        if game is None:
+            break
+        if game.headers["WhiteElo"] == "?":
+            continue
+        if game.headers["BlackElo"] == "?":
+            continue
         rows.extend(game_to_rows(game))
 
         if len(rows) > SHARD_SIZE:
@@ -201,18 +210,18 @@ def cli():
 
 
 @cli.command()
-@click.argument('year', type=int)
-@click.argument('month', type=int)
+@click.argument("year", type=int)
+@click.argument("month", type=int)
 def lichess(year, month):
     """Convert lichess month pgn to csv. Expects a pgn file in the pgns/ dir formatted lichess_db_standard_rated_{year}-{month}.pgn. You can download these from https://database.lichess.org/."""
     lichess_month_pgn_to_csv(year, month)
 
 
 @cli.command()
-@click.argument('year')
-@click.argument('month')
-@click.argument('feature_name')
-@click.option('--num_shards', type=int, help='number of shards to use.')
+@click.argument("year")
+@click.argument("month")
+@click.argument("feature_name")
+@click.option("--num_shards", type=int, help="number of shards to use.")
 def feature(year, month, feature_name, num_shards):
     """
     Generate feature csvs for all shards in csvs/{year}-{month}.
@@ -229,14 +238,16 @@ def feature(year, month, feature_name, num_shards):
         num_shards = len(os.listdir(path))
 
     feature_class = getattr(features, feature_name)
-    feature_dir = FEATURE_CSV_PATH.format(feature_name=feature_name.lower(), year=year, month=month)
+    feature_dir = FEATURE_CSV_PATH.format(
+        feature_name=feature_name.lower(), year=year, month=month
+    )
     os.makedirs(feature_dir, exist_ok=True)
     for shard in range(num_shards):
-        df = pd.read_csv(path + str(shard) + '.csv')
+        df = pd.read_csv(path + str(shard) + ".csv")
         feature_df = feature_class.from_df(df)
-        feature_df.to_csv(feature_dir + str(shard) + '.csv', index=False)
-        print('wrote shard {}'.format(shard))
+        feature_df.to_csv(feature_dir + str(shard) + ".csv", index=False)
+        print("wrote shard {}".format(shard))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     cli()

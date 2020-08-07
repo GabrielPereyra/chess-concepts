@@ -6,7 +6,6 @@ from features.abstract import Features
 
 
 class Checkmate(Features):
-
     def __init__(self, fen, pv):
         self.board = chess.Board(fen)
         self.our_color = self.board.turn
@@ -17,7 +16,7 @@ class Checkmate(Features):
             self.board.push(move)
 
         if not self.board.is_checkmate():
-            print('wtf')
+            print("wtf")
 
     @classmethod
     def from_row(cls, row):
@@ -134,16 +133,16 @@ class Checkmate(Features):
     @cached_property
     def is_back_rank_mate(self):
         return (
-            self.checkmate_move_rank == 7 and
-            self.their_king_is_back_rank and
-            self.num_our_pieces_attacking_their_king_ring == 1
+            self.checkmate_move_rank == 7
+            and self.their_king_is_back_rank
+            and self.num_our_pieces_attacking_their_king_ring == 1
         )
 
     @cached_property
     def is_box_mate(self):
         return (
-            self.our_king_is_attacking_their_king_and_ring and
-            self.num_our_pieces_attacking_their_king_ring == 2
+            self.our_king_is_attacking_their_king_and_ring
+            and self.num_our_pieces_attacking_their_king_ring == 2
         )
 
     @cached_property

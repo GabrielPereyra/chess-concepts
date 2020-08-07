@@ -4,14 +4,13 @@ import pandas as pd
 
 def _is_feature(attr):
     return (
-        not attr.startswith('__') and
-        not attr.startswith('_') and
-        attr not in ['features', 'feature_names', 'from_row', 'from_df']
+        not attr.startswith("__")
+        and not attr.startswith("_")
+        and attr not in ["features", "feature_names", "from_row", "from_df"]
     )
 
 
 class Features:
-
     @classmethod
     def feature_names(cls):
         return [attr for attr in dir(cls) if _is_feature(attr)]
@@ -19,7 +18,7 @@ class Features:
     def features(self):
         feature_dict = {}
         for feature_name in self.feature_names():
-                feature_dict[feature_name] = getattr(self, feature_name)
+            feature_dict[feature_name] = getattr(self, feature_name)
         return feature_dict
 
     @classmethod

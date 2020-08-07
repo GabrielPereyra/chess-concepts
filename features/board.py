@@ -6,7 +6,6 @@ from features.abstract import Features
 
 
 class Board(Features):
-
     def __init__(self, fen):
         self.board = chess.Board(fen)
         self.moves = tuple(self.board.legal_moves)

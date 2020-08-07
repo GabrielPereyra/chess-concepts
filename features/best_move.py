@@ -6,7 +6,6 @@ from features.abstract import Features
 
 
 class BestMove(Features):
-
     def __init__(self, fen, move):
         self.board = chess.Board(fen)
         self.move = chess.Move.from_uci(move)
@@ -119,11 +118,10 @@ class BestMove(Features):
     #
     #     return chess.popcount(pieces_attacked_mask)
 
-
     # def higher_value_pieces_attacked(self):
 
     # def defends_hanging_piece(self):
-        # our hanging piece count before and after move?
+    # our hanging piece count before and after move?
 
     # TODO: threatens fork.
 

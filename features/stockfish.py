@@ -7,17 +7,14 @@ import pandas as pd
 
 from features.abstract import Features
 
-STOCKFISH_PATH = '../Stockfish/src/stockfish'
+STOCKFISH_PATH = "../Stockfish/src/stockfish"
 
 
 def stockfish_info(fen, move, engine, depth, multipv=None):
     board = chess.Board(fen)
     move = [chess.Move.from_uci(move)] if move else None
     return engine.analyse(
-        board,
-        root_moves=move,
-        multipv=multipv,
-        limit=chess.engine.Limit(depth=depth)
+        board, root_moves=move, multipv=multipv, limit=chess.engine.Limit(depth=depth)
     )
 
 
@@ -27,11 +24,7 @@ class Stockfish(Features):
     # TODO: add a version that takes users move and analyzes it.
     def __init__(self, fen, engine, depth, multipv):
         self.info = stockfish_info(
-            fen=fen,
-            move=None,
-            engine=engine,
-            depth=depth,
-            multipv=multipv,
+            fen=fen, move=None, engine=engine, depth=depth, multipv=multipv,
         )
 
     @classmethod
@@ -53,22 +46,21 @@ class Stockfish(Features):
 
     @cached_property
     def best_score(self):
-        return self.info['score'].relative.score()
+        return self.info["score"].relative.score()
 
     @cached_property
     def best_mate(self):
-        return self.info['score'].relative.mate()
+        return self.info["score"].relative.mate()
 
     @cached_property
     def best_move(self):
-        return self.info['pv'][0].uci()
+        return self.info["pv"][0].uci()
 
     @cached_property
     def best_pv(self):
-        return str([move.uci() for move in self.info['pv']])
+        return str([move.uci() for move in self.info["pv"]])
 
 
 class Stockfish10(Stockfish):
-
     def __init__(self, fen, engine):
         super().__init__(fen, engine, 10, None)

@@ -34,7 +34,9 @@ def attacks_on_higher_value_pieces(board, color):
 
     attacks_on_higher_value_pieces = 0
     for square in chess.scan_forward(pieces_mask):
-        attacks_on_higher_value_pieces += is_attacked_by_lower_value(board, color, square)
+        attacks_on_higher_value_pieces += is_attacked_by_lower_value(
+            board, color, square
+        )
 
     return attacks_on_higher_value_pieces
 
@@ -63,10 +65,7 @@ def weak_pieces(board, color):
     for piece in chess.scan_forward(pieces):
         is_attacked = board.is_attacked_by(not color, piece)
         is_defended_by_pawn = is_attacked_by_piece_type(
-            board,
-            color,
-            piece,
-            chess.PAWN,
+            board, color, piece, chess.PAWN,
         )
         weak_pieces += is_attacked and not is_defended_by_pawn
     return weak_pieces

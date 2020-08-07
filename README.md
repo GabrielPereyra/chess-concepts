@@ -33,19 +33,28 @@ csv feature year month feature_name
 features list
 ```
 
-## Plot / Model
+## Plot
+```
+# Plotly elo histogram with test pgn.
+plot hist 0 0 1 elo
+```
 
-TODO: will fix these tomorrow.
+# Development
 
-# Notebooks
+## Testing
 
-| Notebook | Description |
-|--------- | ----------- |
-| [boards](./widgets/boards.ipynb) | Visualize boards based on features. |
+```
+# run pytest with code coverage
+coverage run -m pytest
 
-# Todo
+# print code coverage report
+coverage report
+```
 
-* Add all [checkmate patterns](https://en.wikipedia.org/wiki/Checkmate_pattern) to Checkmate class in `features.py`.
+## Linting
+```
+black .
+```
 
 # Data
 

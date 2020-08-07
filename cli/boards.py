@@ -12,9 +12,9 @@ def cli():
 
 # TODO: add year, month args.
 @cli.command()
-@click.argument('queries', nargs=-1)
-@click.option('csvs', '--csv', multiple=True, default=['lichess'], help='Csvs to load.')
-@click.option('--limit', default=3, help='Number of boards to print.')
+@click.argument("queries", nargs=-1)
+@click.option("csvs", "--csv", multiple=True, default=["lichess"], help="Csvs to load.")
+@click.option("--limit", default=3, help="Number of boards to print.")
 def list(queries, csvs, limit):
     """
     Print boards that match criteria defined by queries.
@@ -33,10 +33,10 @@ def list(queries, csvs, limit):
 
     print(df)
 
-    for fen in df['fen']:
+    for fen in df["fen"]:
         print(chess.Board(fen))
         print()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     cli()

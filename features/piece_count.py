@@ -7,7 +7,6 @@ from features.abstract import Features
 
 # TODO: combine this with board?
 class PieceCount(Features):
-
     def __init__(self, fen):
         self.board = chess.Board(fen)
 
@@ -66,14 +65,14 @@ class PieceCount(Features):
     @cached_property
     def material_advantage(self):
         return (
-            self.our_queens * 9 +
-            self.our_rooks * 5 +
-            self.our_bishops * 3 +
-            self.our_knights * 3 +
-            self.our_pawns -
-            self.their_queens * 9 -
-            self.their_rooks * 5 -
-            self.their_bishops * 3 -
-            self.their_knights * 3 -
-            self.their_pawns
+            self.our_queens * 9
+            + self.our_rooks * 5
+            + self.our_bishops * 3
+            + self.our_knights * 3
+            + self.our_pawns
+            - self.their_queens * 9
+            - self.their_rooks * 5
+            - self.their_bishops * 3
+            - self.their_knights * 3
+            - self.their_pawns
         )
