@@ -2,9 +2,7 @@ from click.testing import CliRunner
 runner = CliRunner()
 
 
-# TODO: option to use lower case feature name.
-
-
+# TODO: parametrize this to take list of command args.
 def test_csv():
     from cli.csv import cli
 
@@ -12,13 +10,10 @@ def test_csv():
     assert result.exit_code == 0
     assert result.output == 'wrote shard 0\n'
 
-    result = runner.invoke(cli, ['feature', '0', '0', 'Board'])
-    assert result.exit_code == 0
-    assert result.output == 'wrote shard 0\n'
-
-    result = runner.invoke(cli, ['feature', '0', '0', 'Stockfish10'])
-    assert result.exit_code == 0
-    assert result.output == 'wrote shard 0\n'
+    for feature in ['Board', 'PieceCount', 'Stockfish10']:
+        result = runner.invoke(cli, ['feature', '0', '0', feature])
+        assert result.exit_code == 0
+        assert result.output == 'wrote shard 0\n'
 
 
 def test_features():
@@ -29,7 +24,6 @@ def test_features():
 
 def test_boards():
     from cli.boards import cli
-
     # TODO: this expects csvs to exists (need to ensure they do.).
     result = runner.invoke(cli, ['list'])
     assert result.exit_code == 0
