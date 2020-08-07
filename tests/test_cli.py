@@ -27,14 +27,18 @@ def test_features():
 def test_boards():
     from cli.boards import cli
 
-    # TODO: this expects csvs to exists (need to ensure they do.).
     result = runner.invoke(cli, ["list"])
     assert result.exit_code == 0
 
 
-# TODO: prevent this from generating plot?
 def test_plot():
     from cli.plot import cli
 
     result = runner.invoke(cli, ["hist", "0", "0", "1", "elo", "--testing"])
+    assert result.exit_code == 0
+
+
+def test_model():
+    from cli.model import cli
+    result = runner.invoke(cli, ["sklearn", "0", "0", "is_blunder"])
     assert result.exit_code == 0

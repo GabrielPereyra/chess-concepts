@@ -8,5 +8,6 @@ setup(
         features=cli.features:cli
         boards=cli.boards:cli
         plot=cli.plot:cli
+        model=cli.model:cli
     """,
 )

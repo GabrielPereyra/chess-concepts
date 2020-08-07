@@ -16,6 +16,8 @@ pip install --editable .
 
 # Command line
 
+These commands expect certain csvs to exists before they are run (see data for steps to create these csvs).
+
 Make sure to run `pip install --editable .`!
 
 ## CSV

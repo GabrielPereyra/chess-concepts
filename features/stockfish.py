@@ -64,3 +64,9 @@ class Stockfish(Features):
 class Stockfish10(Stockfish):
     def __init__(self, fen, engine):
         super().__init__(fen, engine, 10, None)
+
+
+# TODO: how to store scores and pvs?
+# class Stockfish5_500(Stockfish):
+#     def __init__(self, fen, engine):
+#         super().__init__(fen, engine, 5, 500)
