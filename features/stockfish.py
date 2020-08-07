@@ -1,7 +1,9 @@
 from functools import cached_property
 
+import click
 import chess
 import chess.engine
+import pandas as pd
 
 from features.abstract import Features
 

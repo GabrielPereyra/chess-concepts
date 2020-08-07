@@ -2,6 +2,9 @@ from click.testing import CliRunner
 runner = CliRunner()
 
 
+# TODO: option to use lower case feature name.
+
+
 def test_csv():
     from cli.csv import cli
 
@@ -10,6 +13,10 @@ def test_csv():
     assert result.output == 'wrote shard 0\n'
 
     result = runner.invoke(cli, ['feature', '0', '0', 'Board'])
+    assert result.exit_code == 0
+    assert result.output == 'wrote shard 0\n'
+
+    result = runner.invoke(cli, ['feature', '0', '0', 'Stockfish10'])
     assert result.exit_code == 0
     assert result.output == 'wrote shard 0\n'
 
@@ -31,5 +38,5 @@ def test_boards():
 # TODO: prevent this from generating plot?
 def test_plot():
     from cli.plot import cli
-    result = runner.invoke(cli, ['hist', '0', '0', '1', 'elo'])
+    result = runner.invoke(cli, ['hist', '0', '0', '1', 'elo', '--testing'])
     assert result.exit_code == 0
