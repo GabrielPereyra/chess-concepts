@@ -58,4 +58,31 @@ black .
 
 # Data
 
-Preprocessed game data from lichess.org is hosted on aws [here](https://s3.console.aws.amazon.com/s3/buckets/chess-puzzles) (I'll add the code for generating these to this repo soon). The buckets are public so you shouldn't need any credentials to download them, but let me know if that doesn't work for some reason.
+## Create test csvs
+```
+# create lichess csv.
+csv lichess 0 0
+
+# create feature csvs (make sure to capitalize class name!).
+csv feature 0 0 Board
+csv feature 0 0 PieceCount
+csv feature 0 0 Stockfish10
+```
+
+## Create csvs
+```
+# Get lichess.org games from the month of 2015-12.
+wget --directory pgns https://database.lichess.org/standard/lichess_db_standard_rated_2015-12.pgn.bz2
+
+# create lichess csv.
+csv lichess 2015 12
+
+# create feature csvs (make sure to capitalize class name!).
+csv feature 2015 12 Board
+csv feature 2015 12 PieceCount
+csv feature 2015 12 Stockfish10
+```
+
+## Download csvs
+- [ ] Add csvs to [s3 bucket](https://s3.console.aws.amazon.com/s3/buckets/chess-puzzles)
+- [ ] Add script to download csvs from aws.
