@@ -1,3 +1,4 @@
+import utils
 import chess
 import chess.svg
 import pandas as pd
@@ -22,20 +23,19 @@ def fen_to_svg(fen, move):
 
 def df_to_boards(df):
     html = []
-    for fen, move in zip(df['fen'], df['best_move']):
+    for fen, move in zip(df['fen'], df['move']):
         html.append(fen_to_svg(fen, move))
     return ''.join(html)
 
 
 def df_to_table(df, columns=[]):
     df = df.copy()
-    df['svg'] = df.apply(lambda row: fen_to_svg(row['fen'], row['best_move']), axis=1)
+    df['svg'] = df.apply(lambda row: fen_to_svg(row['fen'], row['move']), axis=1)
     df = df[['svg'] + columns]
     return df.to_html(escape=False, index=False)
 
 
 def int_range_slider(df, column):
-
     min = df[column].min()
     max = df[column].max()
 
@@ -50,7 +50,8 @@ def int_range_slider(df, column):
         max=max,
         step=1,
         description=column,
-        continuous_update=False
+        continuous_update=False,
+        style={'description_width': 'initial'}
     )
 
 
@@ -61,7 +62,7 @@ def boards_widget_output(df, **kwargs):
         df = df[df[column] >= min]
         df = df[df[column] <= max]
 
-    html = df_to_boards(df[:21])
+    html = df_to_boards(df[:15])
     return HTML(html)
 
 
@@ -69,13 +70,7 @@ def boards_widget_controls(df, columns):
     return {column: int_range_slider(df, column) for column in columns}
 
 
-def init():
-    df = pd.read_csv('../csvs/data.csv')
-
-    columns = [
-        'best_mate',
-    ]
-
+def init(df, columns):
     interact(
         boards_widget_output,
         df=fixed(df),
