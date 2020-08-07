@@ -1,6 +1,8 @@
 import chess
+import chess.engine
 import features
 import pandas as pd
+from features.stockfish import STOCKFISH_PATH
 
 
 def test_board_features():
@@ -23,6 +25,7 @@ def test_best_pv_features():
     assert f.features() == {'best_pv_our_number_of_captures': 1, 'best_pv_our_number_of_checks': 0, 'best_pv_our_number_of_pieces_moved': 3, 'best_pv_their_number_of_captures': 1, 'best_pv_their_number_of_checks': 0, 'best_pv_their_number_of_pieces_moved': 4}
 
 
+# TODO: refactor these to use pytest parametrization.
 def test_smothered_mate_with_positive_example():
     # from a famous game:
     # https://www.chessgames.com/perl/chessgame?gid=1124489
@@ -87,3 +90,12 @@ def test_from_df():
 
     for feature_class in [features.Board, features.PieceCount, features.BestMove, features.BestPV]:
         feature_df = feature_class.from_df(df)
+
+
+def test_stockfish_features():
+    engine = chess.engine.SimpleEngine.popen_uci(STOCKFISH_PATH)
+
+    f = features.Stockfish10(chess.STARTING_FEN, engine)
+    assert f.features() == {'best_mate': None, 'best_move': 'b1c3', 'best_pv': "['b1c3', 'd7d5', 'd2d4', 'c7c6', 'c1f4', 'e7e6', 'e2e3']", 'best_score': 115}
+
+    engine.quit()
