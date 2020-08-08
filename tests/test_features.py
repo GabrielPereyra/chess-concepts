@@ -81,62 +81,60 @@ def test_best_pv_features():
     }
 
 
-# TODO: refactor these to use pytest parametrization.
-def test_smothered_mate_with_positive_example():
-    # from a famous game:
-    # https://www.chessgames.com/perl/chessgame?gid=1124489
-    fen = "4r1k1/2pRP1pp/2p5/p4pN1/5Qn1/q5P1/P3PP1P/6K1 w - - 0 1"
-    pv = "['f4c4', 'g8h8', 'g5f7', 'h8g8', 'f7h6', 'g8h8', 'c4g8', 'e8g8', 'h6f7']"
-
-    f = features.Checkmate(fen, pv)
-    assert f.features()["is_smothered_mate"] == 1
-
-
-def test_smothered_mate_with_negative_example():
-    # after a simple Greek gift sacrifice:
-    # https://lichess.org/analysis/rnbq1r1k/ppp1npp1/4p3/b2pP1N1/3P4/2P5/PP3PPP/RNBQK2R_w_KQ_-_0_1
-    fen = "rnbq1r1k/ppp1npp1/4p3/b2pP1N1/3P4/2P5/PP3PPP/RNBQK2R w KQ - 2 9"
-    pv = "['d1h5', 'h8g8', 'h5h7']"
-
-    f = features.Checkmate(fen, pv)
-    assert f.features()["is_smothered_mate"] == 0
-
-
-def test_back_rank_mate_for_white_with_positive_example():
-    # https://lichess.org/analysis/6k1/5ppp/8/8/8/8/5PPP/3R2K1_w_-_-_0_1
-    fen = "6k1/5ppp/8/8/8/8/5PPP/3R2K1 w - - 0 1"
-    pv = "['d1d8']"
-
-    f = features.Checkmate(fen, pv)
-    assert f.features()["is_back_rank_mate"] == 1
+@pytest.mark.parametrize(
+    'fen, pv, expected',
+    [
+        # https://www.chessgames.com/perl/chessgame?gid=1124489
+        (
+            "4r1k1/2pRP1pp/2p5/p4pN1/5Qn1/q5P1/P3PP1P/6K1 w - - 0 1",
+            "['f4c4', 'g8h8', 'g5f7', 'h8g8', 'f7h6', 'g8h8', 'c4g8', 'e8g8', 'h6f7']",
+            True,
+        ),
+        # https://lichess.org/analysis/rnbq1r1k/ppp1npp1/4p3/b2pP1N1/3P4/2P5/PP3PPP/RNBQK2R_w_KQ_-_0_1
+        (
+            "rnbq1r1k/ppp1npp1/4p3/b2pP1N1/3P4/2P5/PP3PPP/RNBQK2R w KQ - 2 9",
+            "['d1h5', 'h8g8', 'h5h7']",
+            False,
+        ),
+    ]
+)
+def test_smothered_mate(fen, pv, expected):
+    f = features.CheckmateType(fen, pv)
+    assert f.features()["is_smothered_mate"] == expected
 
 
-def test_back_rank_mate_for_white_with_negative_example():
-    # https://lichess.org/analysis/8/1p2Q3/8/8/k1K5/8/8/8_w_-_-_0_1
-    fen = "8/1p2Q3/8/8/k1K5/8/8/8 w - - 0 1"
-    pv = "['e7b4']"
-
-    f = features.Checkmate(fen, pv)
-    assert f.features()["is_back_rank_mate"] == 0
-
-
-# TODO: fix this (probably not reflecting pos correctly.)
-@pytest.mark.xfail
-def test_back_rank_mate_for_black_with_positive_example():
-    # https://lichess.org/analysis/3r2k1/5ppp/8/8/8/8/5PPP/6K1_b_-_-_0_1
-    fen = "3r2k1/5ppp/8/8/8/8/5PPP/6K1 b - - 0 1"
-    pv = "['d8d1']"
-
-    f = features.Checkmate(fen, pv)
-    assert f.features()["is_back_rank_mate"] == 1
-
-
-def test_back_rank_mate_for_black_with_negative_example():
-    # https://lichess.org/analysis/8/1P2q3/8/8/K1k5/8/8/8_b_-_-_0_1
-    fen = "8/1P2q3/8/8/K1k5/8/8/8 b - - 0 1"
-    pv = "['e7b4']"
-    f = features.Checkmate(fen, pv)
-    assert f.features()["is_back_rank_mate"] == 0
+@pytest.mark.parametrize(
+    'fen, pv, expected',
+    [
+        # https://lichess.org/analysis/6k1/5ppp/8/8/8/8/5PPP/3R2K1_w_-_-_0_1
+        (
+            "6k1/5ppp/8/8/8/8/5PPP/3R2K1 w - - 0 1",
+            "['d1d8']",
+            True,
+        ),
+        # https://lichess.org/analysis/8/1p2Q3/8/8/k1K5/8/8/8_w_-_-_0_1
+        (
+            "8/1p2Q3/8/8/k1K5/8/8/8 w - - 0 1",
+            "['e7b4']",
+            False,
+        ),
+        # https://lichess.org/analysis/3r2k1/5ppp/8/8/8/8/5PPP/6K1_b_-_-_0_1
+        (
+            "3r2k1/5ppp/8/8/8/8/5PPP/6K1 b - - 0 1",
+            "['d8d1']",
+            True,
+        ),
+        # https://lichess.org/analysis/8/1P2q3/8/8/K1k5/8/8/8_b_-_-_0_1
+        (
+            "8/1P2q3/8/8/K1k5/8/8/8 b - - 0 1",
+            "['e7b4']",
+            False,
+        )
+    ]
+)
+def test_back_rank_mate(fen, pv, expected):
+    f = features.CheckmateType(fen, pv)
+    assert f.features()["is_back_rank_mate"] == expected
 
 
 def test_from_df():
