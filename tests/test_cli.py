@@ -11,7 +11,7 @@ def test_csv():
     assert result.exit_code == 0
     assert result.output == "wrote shard 0\n"
 
-    for feature in ["Board", "PieceCount", "Stockfish10"]:
+    for feature in ["Board", "PieceCount", "Stockfish10", "BestMove", "BestPV"]:
         result = runner.invoke(cli, ["feature", "0", "0", feature])
         assert result.exit_code == 0
         assert result.output == "wrote shard 0\n"
@@ -34,11 +34,12 @@ def test_boards():
 def test_plot():
     from cli.plot import cli
 
-    result = runner.invoke(cli, ["hist", "0", "0", "1", "elo", "--testing"])
+    result = runner.invoke(cli, ["hist", "0", "0", "elo", "--testing"])
     assert result.exit_code == 0
 
 
 def test_model():
     from cli.model import cli
+
     result = runner.invoke(cli, ["sklearn", "0", "0", "is_blunder"])
     assert result.exit_code == 0

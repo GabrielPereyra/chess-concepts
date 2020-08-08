@@ -6,6 +6,9 @@ from features.abstract import Features
 
 
 class BestPV(Features):
+
+    csvs = ["lichess", "stockfish10"]
+
     def __init__(self, fen, pv):
         self.board = chess.Board(fen)
         self.pv = [chess.Move.from_uci(move) for move in eval(pv)]

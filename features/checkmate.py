@@ -6,6 +6,9 @@ from features.abstract import Features
 
 
 class Checkmate(Features):
+
+    csvs = ["lichess", "stockfish10"]
+
     def __init__(self, fen, pv):
         self.board = chess.Board(fen)
         self.our_color = self.board.turn
@@ -15,6 +18,7 @@ class Checkmate(Features):
         for move in self.pv:
             self.board.push(move)
 
+        # TODO: need to figure out why this happens.
         if not self.board.is_checkmate():
             print("wtf")
 

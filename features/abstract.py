@@ -2,15 +2,21 @@ import click
 import pandas as pd
 
 
+not_feature_attributes = ["features", "feature_names", "from_row", "from_df", "csvs"]
+
+
 def _is_feature(attr):
     return (
         not attr.startswith("__")
         and not attr.startswith("_")
-        and attr not in ["features", "feature_names", "from_row", "from_df"]
+        and attr not in not_feature_attributes
     )
 
 
 class Features:
+
+    csvs = ["lichess"]
+
     @classmethod
     def feature_names(cls):
         return [attr for attr in dir(cls) if _is_feature(attr)]

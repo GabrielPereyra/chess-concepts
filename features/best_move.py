@@ -6,6 +6,9 @@ from features.abstract import Features
 
 
 class BestMove(Features):
+
+    csvs = ["lichess", "stockfish10"]
+
     def __init__(self, fen, move):
         self.board = chess.Board(fen)
         self.move = chess.Move.from_uci(move)
