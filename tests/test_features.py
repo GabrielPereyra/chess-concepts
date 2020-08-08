@@ -82,7 +82,7 @@ def test_best_pv_features():
 
 
 @pytest.mark.parametrize(
-    'fen, pv, expected',
+    "fen, pv, expected",
     [
         # https://www.chessgames.com/perl/chessgame?gid=1124489
         (
@@ -96,7 +96,7 @@ def test_best_pv_features():
             "['d1h5', 'h8g8', 'h5h7']",
             False,
         ),
-    ]
+    ],
 )
 def test_smothered_mate(fen, pv, expected):
     f = features.CheckmateType(fen, pv)
@@ -104,33 +104,17 @@ def test_smothered_mate(fen, pv, expected):
 
 
 @pytest.mark.parametrize(
-    'fen, pv, expected',
+    "fen, pv, expected",
     [
         # https://lichess.org/analysis/6k1/5ppp/8/8/8/8/5PPP/3R2K1_w_-_-_0_1
-        (
-            "6k1/5ppp/8/8/8/8/5PPP/3R2K1 w - - 0 1",
-            "['d1d8']",
-            True,
-        ),
+        ("6k1/5ppp/8/8/8/8/5PPP/3R2K1 w - - 0 1", "['d1d8']", True,),
         # https://lichess.org/analysis/8/1p2Q3/8/8/k1K5/8/8/8_w_-_-_0_1
-        (
-            "8/1p2Q3/8/8/k1K5/8/8/8 w - - 0 1",
-            "['e7b4']",
-            False,
-        ),
+        ("8/1p2Q3/8/8/k1K5/8/8/8 w - - 0 1", "['e7b4']", False,),
         # https://lichess.org/analysis/3r2k1/5ppp/8/8/8/8/5PPP/6K1_b_-_-_0_1
-        (
-            "3r2k1/5ppp/8/8/8/8/5PPP/6K1 b - - 0 1",
-            "['d8d1']",
-            True,
-        ),
+        ("3r2k1/5ppp/8/8/8/8/5PPP/6K1 b - - 0 1", "['d8d1']", True,),
         # https://lichess.org/analysis/8/1P2q3/8/8/K1k5/8/8/8_b_-_-_0_1
-        (
-            "8/1P2q3/8/8/K1k5/8/8/8 b - - 0 1",
-            "['e7b4']",
-            False,
-        )
-    ]
+        ("8/1P2q3/8/8/K1k5/8/8/8 b - - 0 1", "['e7b4']", False,),
+    ],
 )
 def test_back_rank_mate(fen, pv, expected):
     f = features.CheckmateType(fen, pv)

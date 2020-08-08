@@ -53,7 +53,10 @@ class CheckmateType(Features):
         if chess.square_rank(last_move.to_square) != their_back_rank:
             return False
 
-        if self.board.piece_type_at(last_move.to_square) not in [chess.QUEEN, chess.ROOK]:
+        if self.board.piece_type_at(last_move.to_square) not in [
+            chess.QUEEN,
+            chess.ROOK,
+        ]:
             return False
 
         for square in self.board.attacks(their_king):
