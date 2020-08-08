@@ -1,5 +1,6 @@
 import os
 import math
+import utils
 import click
 import chess
 import chess.pgn
@@ -232,7 +233,6 @@ def feature(year, month, feature_name, num_shards):
 
     feature_name: class name of feature.
     """
-    # TODO: move this to function.
     path = LICHESS_CSV_PATH.format(year=year, month=month)
     if num_shards is None:
         num_shards = len(os.listdir(path))
@@ -243,7 +243,7 @@ def feature(year, month, feature_name, num_shards):
     )
     os.makedirs(feature_dir, exist_ok=True)
     for shard in range(num_shards):
-        df = pd.read_csv(path + str(shard) + ".csv")
+        df = utils.get_df(feature_class.csvs, years=[year], months=[month], shard=shard)
         feature_df = feature_class.from_df(df)
         feature_df.to_csv(feature_dir + str(shard) + ".csv", index=False)
         print("wrote shard {}".format(shard))

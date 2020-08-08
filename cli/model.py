@@ -48,15 +48,13 @@ def cli():
 @click.argument("year")
 @click.argument("month")
 @click.argument("metric", type=click.Choice(METRICS, case_sensitive=False))
-@click.option("--shards", type=int, help="Number of shards to use.")
+@click.option("--num_shards", type=int, help="number of shards to use.")
 @click.option("csvs", "--csv", multiple=True, default=["lichess"], help="Csvs to load.")
-def sklearn(year, month, metric, shards, csvs):
+def sklearn(year, month, metric, num_shards, csvs):
     """
     Train dummy and logistic regression models to predict a given metric.
     """
-    if shards is not None:
-        shards = range(shards)
-    df = utils.get_df(csvs, years=[year], months=[month], shards=shards)
+    df = utils.get_df(csvs, years=[year], months=[month], num_shards=num_shards)
     y = df[metric]
     df = df.drop(METRICS + NON_FEATURE_COLUMNS, axis=1)
     x = df[df.columns].values
