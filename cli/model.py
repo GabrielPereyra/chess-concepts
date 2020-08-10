@@ -43,6 +43,16 @@ NON_FEATURE_COLUMNS = [
 ]
 
 
+def print_feature_importance(coef, feature_names):
+    df = pd.DataFrame({
+        'importance': map(abs, coef),
+        'feature': feature_names
+    })
+    df = df.sort_values('importance', ascending=False)
+    print('Feature Importance')
+    print(df)
+
+
 @click.group()
 def cli():
     pass
@@ -54,7 +64,8 @@ def cli():
 @click.argument("metric", type=click.Choice(METRICS, case_sensitive=False))
 @click.option("--num_shards", type=int, help="number of shards to use.")
 @click.option("csvs", "--csv", multiple=True, default=["lichess"], help="Csvs to load.")
-def sklearn(year, month, metric, num_shards, csvs):
+@click.option("--importance", is_flag=True, help="Print feature importance.")
+def sklearn(year, month, metric, num_shards, csvs, importance):
     """
     Train dummy and logistic regression models to predict a given metric.
     """
@@ -65,7 +76,7 @@ def sklearn(year, month, metric, num_shards, csvs):
         limit = min(len(df[df[metric]]), len(df[~df[metric]]))
         df = pd.concat([df[df[metric]][:limit], df[~df[metric]][:limit]])
 
-    print(len(df))
+    print('using {} examples'.format(len(df)))
 
     y = df[metric]
     df = df.drop(METRICS + NON_FEATURE_COLUMNS, axis=1)
@@ -78,7 +89,12 @@ def sklearn(year, month, metric, num_shards, csvs):
 
     model = LogisticRegression()
     model = model.fit(x_train, y_train)
+    print()
+    print('Classification Report')
     print(classification_report(y_test, model.predict(x_test)))
+
+    if importance:
+        print_feature_importance(model.coef_[0], df.columns)
 
 
 if __name__ == "__main__":

@@ -41,5 +41,5 @@ def test_plot():
 def test_model():
     from cli.model import cli
 
-    result = runner.invoke(cli, ["sklearn", "0", "0", "is_blunder"])
+    result = runner.invoke(cli, ["sklearn", "0", "0", "is_blunder", "--importance"])
     assert result.exit_code == 0
