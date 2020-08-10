@@ -78,9 +78,14 @@ def sklearn(year, month, metric, num_shards, csvs, importance):
 
     print('using {} examples'.format(len(df)))
 
+    # remove games without time_control.
+    if 'approximate_game_length' in df.columns:
+        df = df[~df['approximate_game_length'].isna()]
+
     y = df[metric]
     df = df.drop(METRICS + NON_FEATURE_COLUMNS, axis=1)
     x = df[df.columns].values
+
 
     x_train, x_test, y_train, y_test = train_test_split(x, y, random_state=0)
     s = StandardScaler()

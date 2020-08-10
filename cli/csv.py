@@ -233,6 +233,9 @@ def feature(year, month, feature_name, num_shards):
 
     feature_name: class name of feature.
     """
+
+    # TODO: handle case where user passes a lowercase feature name.
+
     path = LICHESS_CSV_PATH.format(year=year, month=month)
     if num_shards is None:
         num_shards = len(os.listdir(path))

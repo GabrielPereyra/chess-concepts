@@ -13,6 +13,7 @@ class BestMove(Features):
         self.board = chess.Board(fen)
         self.move = chess.Move.from_uci(move)
 
+    # TODO: replace this with an attribute which specifies columns
     @classmethod
     def from_row(cls, row):
         return cls(row.fen, row.best_move)
