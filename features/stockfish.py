@@ -4,10 +4,13 @@ import click
 import chess
 import chess.engine
 import pandas as pd
+from chess.engine import _parse_uci_info
+import subprocess
 
 from features.abstract import Features
 
 STOCKFISH_PATH = "../Stockfish/src/stockfish"
+EVAL_STOCKFISH_PATH = "../Stockfish\ copy/src/stockfish"
 
 
 def stockfish_info(fen, move, engine, depth, multipv=None):
@@ -62,8 +65,73 @@ class Stockfish(Features):
 
 
 class Stockfish10(Stockfish):
+
     def __init__(self, fen, engine):
         super().__init__(fen, engine, 10, None)
+
+
+class StockfishDepth(Features):
+
+    def __init__(self, fen, p):
+        p.stdin.write('go depth 10\n')
+
+        board = chess.Board(fen)
+
+        self.scores = []
+        self.mates = []
+        self.moves = []
+        self.pvs = []
+        for line in iter(p.stdout.readline, ''):
+            if 'bestmove' in line:
+                break
+
+            info = _parse_uci_info(line.strip(), board)
+
+            self.scores.append(info['score'].relative.score())
+            self.mates.append(info['score'].relative.mate())
+            self.moves.append(info['pv'][0].uci())
+            self.pvs.append(str([move.uci() for move in info["pv"]]))
+
+    @classmethod
+    def from_row(cls, row, p):
+        return cls(row.fen, p)
+
+    @classmethod
+    def from_df(cls, df):
+        p = subprocess.Popen(
+            STOCKFISH_PATH,
+            stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            universal_newlines=True,
+            bufsize=1
+        )
+        p.stdout.readline() # read info line on init.
+
+        feature_rows = []
+        with click.progressbar(tuple(df.itertuples())) as rows:
+            for row in rows:
+                feature_instance = cls.from_row(row, p)
+                feature_rows.append(feature_instance.features())
+
+        p.kill()
+        return pd.DataFrame(feature_rows)
+
+    @cached_property
+    def scores(self):
+        return self.scores
+
+    @cached_property
+    def mates(self):
+        return self.mates
+
+    @cached_property
+    def moves(self):
+        return self.moves
+
+    @cached_property
+    def pvs(self):
+        return self.pvs
 
 
 # TODO: how to store scores and pvs?
