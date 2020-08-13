@@ -44,12 +44,9 @@ NON_FEATURE_COLUMNS = [
 
 
 def print_feature_importance(coef, feature_names):
-    df = pd.DataFrame({
-        'importance': map(abs, coef),
-        'feature': feature_names
-    })
-    df = df.sort_values('importance', ascending=False)
-    print('Feature Importance')
+    df = pd.DataFrame({"importance": map(abs, coef), "feature": feature_names})
+    df = df.sort_values("importance", ascending=False)
+    print("Feature Importance")
     print(df)
 
 
@@ -76,16 +73,15 @@ def sklearn(year, month, metric, num_shards, csvs, importance):
         limit = min(len(df[df[metric]]), len(df[~df[metric]]))
         df = pd.concat([df[df[metric]][:limit], df[~df[metric]][:limit]])
 
-    print('using {} examples'.format(len(df)))
+    print("using {} examples".format(len(df)))
 
     # remove games without time_control.
-    if 'approximate_game_length' in df.columns:
-        df = df[~df['approximate_game_length'].isna()]
+    if "approximate_game_length" in df.columns:
+        df = df[~df["approximate_game_length"].isna()]
 
     y = df[metric]
     df = df.drop(METRICS + NON_FEATURE_COLUMNS, axis=1)
     x = df[df.columns].values
-
 
     x_train, x_test, y_train, y_test = train_test_split(x, y, random_state=0)
     s = StandardScaler()
@@ -95,7 +91,7 @@ def sklearn(year, month, metric, num_shards, csvs, importance):
     model = LogisticRegression()
     model = model.fit(x_train, y_train)
     print()
-    print('Classification Report')
+    print("Classification Report")
     print(classification_report(y_test, model.predict(x_test)))
 
     if importance:

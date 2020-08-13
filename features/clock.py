@@ -22,10 +22,10 @@ class Clock(Features):
         # https://lichess.org/forum/general-chess-discussion/is-there-any-data-or-statistics-that-shows
 
         # TODO: why are some games missing time_controls?
-        if self.time_control == '-':
+        if self.time_control == "-":
             return None
 
-        s, i = self.time_control.split('+')
+        s, i = self.time_control.split("+")
         s = int(s)
         i = int(i)
         return s + i * 40
@@ -33,9 +33,9 @@ class Clock(Features):
     @cached_property
     def relative_time_remaining(self):
         """Clock divided by approximate game length."""
-        if self.time_control == '-':
+        if self.time_control == "-":
             return None
 
         return self.clock / self.approximate_game_length
 
-    # TODO: difference in our clock vs. their clock? Would need to add their clock to lichess csv.
+    # TODO: time_control name (hyper, bullet, rapid, classical)

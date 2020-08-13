@@ -11,7 +11,7 @@ def test_csv():
     assert result.exit_code == 0
     assert result.output == "wrote shard 0\n"
 
-    for feature in ["Board", "PieceCount", "Stockfish10", "BestMove", "BestPV"]:
+    for feature in ["Board", "Stockfish10", "BestMove", "BestPV"]:
         result = runner.invoke(cli, ["feature", "0", "0", feature])
         assert result.exit_code == 0
         assert result.output == "wrote shard 0\n"

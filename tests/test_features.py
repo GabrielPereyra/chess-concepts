@@ -28,12 +28,6 @@ def test_board_features():
         "their_number_of_queen_moves": 0,
         "their_number_of_rook_moves": 0,
         "turn": True,
-    }
-
-
-def test_piece_count_features():
-    f = features.PieceCount(chess.STARTING_FEN)
-    assert f.features() == {
         "material_advantage": 0,
         "our_bishops": 2,
         "our_knights": 2,
@@ -48,6 +42,9 @@ def test_piece_count_features():
         "their_piece_count": 16,
         "their_queens": 1,
         "their_rooks": 2,
+        "is_opening": True,
+        "is_endgame": False,
+        "is_midgame": False,
     }
 
 
@@ -134,7 +131,6 @@ def test_from_df():
 
     for feature_class in [
         features.Board,
-        features.PieceCount,
         features.BestMove,
         features.BestPV,
     ]:
@@ -156,5 +152,8 @@ def test_stockfish_features():
 
 
 def test_clock_features():
-    f = features.Clock('60+1', 30)
-    assert f.features() == {'approximate_game_length': 100, 'relative_time_remaining': 0.3}
+    f = features.Clock("60+1", 30)
+    assert f.features() == {
+        "approximate_game_length": 100,
+        "relative_time_remaining": 0.3,
+    }
