@@ -6,3 +6,4 @@ from features.checkmate_type import CheckmateType
 from features.stockfish import Stockfish10, StockfishDepth
 from features.value import Value
 from features.clock import Clock
+from features.motives import Motives
