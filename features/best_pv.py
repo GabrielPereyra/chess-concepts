@@ -74,6 +74,24 @@ class BestPV(Features):
     def best_pv_their_number_of_pieces_moved(self):
         return self._number_of_pieces_moved(self.board, self.pv, not self.board.turn)
 
+    @staticmethod
+    def _moved_piece_types(board, pv, color):
+        moved_piece_types = set()
+        for move in pv:
+            board.push(move)
+            piece = board.piece_at(move.to_square)
+            if piece.color == color:
+                moved_piece_types.add(piece.piece_type)
+        return sorted(moved_piece_types)
+
+    @cached_property
+    def best_pv_our_moved_piece_types(self):
+        return self._moved_piece_types(self.board.copy(), self.pv, self.board.turn)
+
+    @cached_property
+    def best_pv_their_moved_piece_types(self):
+        return self._moved_piece_types(self.board.copy(), self.pv, not self.board.turn)
+
     # @cached_property
     # def best_move_is_captured(self):
     #     if len(self.pv) == 1: return False

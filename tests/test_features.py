@@ -76,6 +76,8 @@ def test_best_pv_features():
         "best_pv_their_number_of_captures": 1,
         "best_pv_their_number_of_checks": 0,
         "best_pv_their_number_of_pieces_moved": 4,
+        "best_pv_our_moved_piece_types": [chess.PAWN, chess.KNIGHT, chess.BISHOP],
+        "best_pv_their_moved_piece_types": [chess.PAWN, chess.KNIGHT],
     }
 
 
@@ -311,17 +313,29 @@ def test_skewer(fen, pv, expected_contains_skewer, expected_is_first_move_skewer
 
 
 @pytest.mark.parametrize(
-    "fen, pv, expected",
+    "fen, pv, our_expected, their_expected",
     [
         # https://lichess.org/analysis/6kq/8/8/4n3/4p3/8/5P2/4RBK1_b_-_-_0_1
-        ("6kq/8/8/4n3/4p3/8/5P2/4RBK1 b - - 0 1", "['e5f3', 'g1g2', 'h8h2']", True,),
+        (
+            "6kq/8/8/4n3/4p3/8/5P2/4RBK1 b - - 0 1",
+            "['e5f3', 'g1g2', 'h8h2']",
+            [chess.KNIGHT, chess.QUEEN],
+            [chess.KING],
+        ),
         # https://lichess.org/analysis/8/8/8/8/1N3K1k/8/8/3Q4_w_-_-_0_1
-        ("8/8/8/8/1N3K1k/8/8/3Q4 w - - 0 1", "['d1h1']", False,),
+        ("8/8/8/8/1N3K1k/8/8/3Q4 w - - 0 1", "['d1h1']", [chess.QUEEN], []),
+        (
+            chess.STARTING_FEN,
+            "['e2e4', 'e7e5', 'g1f3', 'b8c6', 'f1b5', 'a7a6', 'b5c6', 'd7c6']",
+            [chess.PAWN, chess.KNIGHT, chess.BISHOP,],
+            [chess.PAWN, chess.KNIGHT,],
+        ),
     ],
 )
-def test_mate_with_moved_knight_queen(fen, pv, expected):
-    f = features.CheckmateType(fen, pv)
-    assert f.features()["mate_with_moved_knight_queen"] == expected
+def test_best_pv_moved_piece_types(fen, pv, our_expected, their_expected):
+    f = features.BestPV(fen, pv)
+    assert f.features()["best_pv_our_moved_piece_types"] == our_expected
+    assert f.features()["best_pv_their_moved_piece_types"] == their_expected
 
 
 def test_from_df():

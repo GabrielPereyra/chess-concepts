@@ -7,34 +7,6 @@ import chess
 from features.abstract import Features
 
 
-def non_empty_powerset(iterable):
-    s = list(iterable)
-    return itertools.chain.from_iterable(
-        itertools.combinations(s, r) for r in range(1, len(s) + 1)
-    )
-
-
-def generate_mates_with_moved_piece_types_features(cls):
-    for piece_types in non_empty_powerset(chess.PIECE_TYPES):
-        name = "mate_with_moved_{}".format(
-            "_".join([chess.piece_name(piece_type) for piece_type in piece_types])
-        )
-
-        def make_f(piece_types):
-            def f(self):
-                return self._mate_with_moved_piece_types(piece_types)
-
-            return f
-
-        f = make_f(piece_types)
-
-        cached_f = cached_property(f)
-        cached_f.__set_name__(None, name)
-        setattr(cls, name, cached_f)
-    return cls
-
-
-@generate_mates_with_moved_piece_types_features
 class CheckmateType(Features):
     def __init__(self, fen, pv):
         self.board = chess.Board(fen)
@@ -112,13 +84,3 @@ class CheckmateType(Features):
             if piece is None or piece.color != self.their_color:
                 return False
         return True
-
-    def _mate_with_moved_piece_types(self, piece_types):
-        board = self.board.copy()
-        our_moved_piece_types = set()
-        for move in self.pv:
-            board.push(move)
-            piece = board.piece_at(move.to_square)
-            if piece.color == self.our_color:
-                our_moved_piece_types.add(piece.piece_type)
-        return set(piece_types) == our_moved_piece_types
