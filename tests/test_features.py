@@ -172,9 +172,18 @@ def test_forks(fen, pv, expected_contains_fork, expected_is_first_move_fork):
     assert f.features()["is_first_move_fork"] == expected_is_first_move_fork
 
 
-def test_is_first_move_fork(fen, pv, expected):
-    f = features.Motives(fen, pv)
-    assert f.features()["contains_fork"] == expected
+@pytest.mark.parametrize(
+    "fen, pv, expected",
+    [
+        # https://lichess.org/analysis/6kq/8/8/4n3/4p3/8/5P2/4RBK1_b_-_-_0_1
+        ("6kq/8/8/4n3/4p3/8/5P2/4RBK1 b - - 0 1", "['e5f3', 'g1g2', 'h8h2']", True,),
+        # https://lichess.org/analysis/8/8/8/8/1N3K1k/8/8/3Q4_w_-_-_0_1
+        ("8/8/8/8/1N3K1k/8/8/3Q4 w - - 0 1", "['d1h1']", False,),
+    ],
+)
+def test_mate_with_moved_knight_queen(fen, pv, expected):
+    f = features.CheckmateType(fen, pv)
+    assert f.features()["mate_with_moved_knight_queen"] == expected
 
 
 def test_from_df():
