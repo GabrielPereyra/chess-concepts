@@ -3,8 +3,8 @@ from functools import cached_property
 import chess
 
 from features.abstract import Features
-from features.helpers import get_attacking_higher_value_piece
-from features.helpers import get_attacking_undefended_piece
+from features.helpers import get_attacking
+from features.helpers import is_lower_value, is_lower_equal_value
 
 
 def contains_fork(fen, pv):
@@ -46,12 +46,20 @@ def is_discovered_attack(fen: str, move: chess.Move) -> bool:
     board = chess.Board(fen)
     our_color = board.turn
 
-    attackers_before_move = get_attacking_higher_value_piece(board, our_color)
-    attackers_before_move.update(get_attacking_undefended_piece(board, our_color))
+    attackers_before_move = get_attacking(
+        board, our_color, piece_type_filter=is_lower_value
+    )
+    attackers_before_move.update(
+        get_attacking(board, our_color, attacked_is_defended=False)
+    )
     board.push(move)
 
-    attackers_after_move = get_attacking_higher_value_piece(board, our_color)
-    attackers_after_move.update(get_attacking_undefended_piece(board, our_color))
+    attackers_after_move = get_attacking(
+        board, our_color, piece_type_filter=is_lower_value
+    )
+    attackers_after_move.update(
+        get_attacking(board, our_color, attacked_is_defended=False)
+    )
 
     attackers_after_move = {
         (attacking, attacked)
@@ -60,6 +68,54 @@ def is_discovered_attack(fen: str, move: chess.Move) -> bool:
     }
 
     return bool(attackers_after_move - attackers_before_move)
+
+
+def is_skewer(fen: str, move: chess.Move) -> bool:
+    """
+    Can be only performed by a queen, rook or bishop.
+
+    Their piece is attacked by our piece of a lower value that is either defended or not attacked.
+
+    When their attacked piece is removed from the board, our attacking piece attack their another,
+    previously not attacked, piece of at least the same value.
+
+    NOTE: it will classify some of the examples as skewers that probably shouldn't be called skewers.
+    Example is a position where we attack their queen with our rook. If the queen moves, then it discovers our attack
+    on their rook, but actually the queen can move in such a way that it will defend their rook.
+    """
+
+    board = chess.Board(fen)
+
+    if board.piece_type_at(move.from_square) not in [
+        chess.QUEEN,
+        chess.ROOK,
+        chess.BISHOP,
+    ]:
+        return False
+
+    our_color = board.turn
+    their_color = not board.turn
+    attackers_before_move = get_attacking(
+        board, our_color, piece_type_filter=is_lower_value
+    )
+    board.push(move)
+
+    attackers_after_move = get_attacking(
+        board, our_color, piece_type_filter=is_lower_value
+    )
+
+    for attacker, attacked in attackers_after_move - attackers_before_move:
+        attacker_is_attacked = bool(board.attackers(their_color, attacker))
+        attacker_is_defended = bool(board.attackers(our_color, attacker))
+        if not attacker_is_attacked or attacker_is_defended:
+            board_without_attacked = board.copy()
+            board_without_attacked.remove_piece_at(attacked)
+            new_attackers = get_attacking(
+                board_without_attacked, our_color, is_lower_equal_value
+            )
+            if new_attackers - attackers_after_move:
+                return True
+    return False
 
 
 class Motives(Features):
@@ -97,3 +153,20 @@ class Motives(Features):
     @cached_property
     def is_first_move_discovered_attack(self):
         return is_discovered_attack(self.board.fen(), self.pv[0])
+
+    @cached_property
+    def contains_skewer(self):
+        board = self.board.copy()
+        for i in range(0, len(self.pv), 2):
+            our_move = self.pv[i]
+            if is_skewer(board.fen(), our_move):
+                return True
+            board.push(our_move)
+            if i + 1 < len(self.pv):
+                their_move = self.pv[i + 1]
+                board.push(their_move)
+        return False
+
+    @cached_property
+    def is_first_move_skewer(self):
+        return is_skewer(self.board.fen(), self.pv[0])

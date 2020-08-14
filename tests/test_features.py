@@ -167,7 +167,7 @@ def test_back_rank_mate(fen, pv, expected):
         ),
     ],
 )
-def test_forks(fen, pv, expected_contains_fork, expected_is_first_move_fork):
+def test_fork(fen, pv, expected_contains_fork, expected_is_first_move_fork):
     f = features.Motives(fen, pv)
     assert f.features()["contains_fork"] == expected_contains_fork
     assert f.features()["is_first_move_fork"] == expected_is_first_move_fork
@@ -277,6 +277,37 @@ def test_discovered_attack(
         f.features()["is_first_move_discovered_attack"]
         == expected_is_first_move_discovered_attack
     )
+
+
+@pytest.mark.parametrize(
+    "fen, pv, expected_contains_skewer, expected_is_first_move_skewer",
+    [
+        # https://lichess.org/analysis/8/3qk3/4b3/8/4KR2/5Q2/8/8_b_-_-_0_1
+        ("8/3qk3/4b3/8/4KR2/5Q2/8/8 b - - 0 1", "['e6d5']", True, True,),
+        # https://lichess.org/analysis/8/1r3k2/4ppp1/3q4/5PB1/4P3/4QK2/8_w_-_-_0_1
+        ("8/1r3k2/4ppp1/3q4/5PB1/4P3/4QK2/8 w - - 0 1", "['g4f3']", True, True,),
+        # https://lichess.org/analysis/2Q5/1p4q1/p2B1k2/6p1/P3b3/7P/5PP1/6K1_w_-_-_0_1
+        (
+            "2Q5/1p4q1/p2B1k2/6p1/P3b3/7P/5PP1/6K1 w - - 0 1",
+            "['d6e5', 'f6e5', 'c8c3']",
+            True,
+            False,
+        ),
+        # It's almost a skewer but the attacked piece has lower value
+        # https://lichess.org/analysis/5rk1/2r2pp1/7p/8/2b5/7P/5PP1/5RK1_w_-_-_0_1
+        ("5rk1/2r2pp1/7p/8/2b5/7P/5PP1/5RK1 w - - 0 1", "['f1c1']", False, False,),
+        # It's almost a skewer but the piece hidden behind the attacked piece can be defended by the attacked piece
+        # https://lichess.org/analysis/5rk1/2b2pp1/7p/8/8/2q1B2P/5PP1/5RK1_w_-_-_0_1
+        ("5rk1/2b2pp1/7p/8/8/2q1B2P/5PP1/5RK1 w - - 0 1", "['f1c1']", False, False,),
+        # It's almost the skewer but the attacked piece can capture the attacking piece because it is undefended
+        # https://lichess.org/analysis/3b1rk1/5p1p/6pq/4Q3/8/7P/5PP1/R5K1_b_-_-_0_1
+        ("3b1rk1/5p1p/6pq/4Q3/8/7P/5PP1/R5K1 b - - 0 1", "['d8f6']", False, False,),
+    ],
+)
+def test_skewer(fen, pv, expected_contains_skewer, expected_is_first_move_skewer):
+    f = features.Motives(fen, pv)
+    assert f.features()["contains_skewer"] == expected_contains_skewer
+    assert f.features()["is_first_move_skewer"] == expected_is_first_move_skewer
 
 
 @pytest.mark.parametrize(

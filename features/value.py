@@ -3,14 +3,14 @@ from functools import cached_property
 import chess
 
 from features.abstract import Features
-from features.helpers import is_higher_value
+from features.helpers import is_greater_value
 
 
 def is_attacked_by_lower_value(board, color, square):
     piece_type = board.piece_type_at(square)
     for attacker in board.attackers(color, square):
         attacker_piece_type = board.piece_type_at(attacker)
-        if is_higher_value(piece_type, attacker_piece_type):
+        if is_greater_value(piece_type, attacker_piece_type):
             return True
     return False
 
