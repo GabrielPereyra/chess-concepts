@@ -86,7 +86,6 @@ class StockfishDepth(Features):
                 break
 
             info = _parse_uci_info_fixed(line.strip(), board)
-            print(info)
 
             self.scores.append(info['score'].relative.score())
             self.mates.append(info['score'].relative.mate())
