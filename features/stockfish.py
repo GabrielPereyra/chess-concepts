@@ -1,13 +1,12 @@
+import subprocess
 from functools import cached_property
 
-import click
 import chess
 import chess.engine
+import click
 import pandas as pd
-import subprocess
 
 from features.abstract import Features
-from features.parse_uci_info import _parse_uci_info_fixed
 
 STOCKFISH_PATH = "../Stockfish/src/stockfish"
 EVAL_STOCKFISH_PATH = "../Stockfish\ copy/src/stockfish"
@@ -72,9 +71,12 @@ class Stockfish10(Stockfish):
 
 class StockfishDepth(Features):
 
-    def __init__(self, fen, p):
+    def __init__(self, fen, p, depth=20, bestmove=None):
+        """
+        If bestmove is provided then the search stops at best move
+        """
         p.stdin.write('position fen ' + fen + '\n')
-        p.stdin.write('go depth 10\n')
+        p.stdin.write(f'go depth {depth}\n')
 
         board = chess.Board(fen)
 
@@ -86,13 +88,16 @@ class StockfishDepth(Features):
             if 'bestmove' in line:
                 break
 
-            info = _parse_uci_info_fixed(line.strip(), board)
+            info = chess.engine._parse_uci_info(line.strip(), board)
 
             if 'score' in info:
                 self.scores.append(info['score'].relative.score())
                 self.mates.append(info['score'].relative.mate())
                 self.moves.append(info['pv'][0])
                 self.pvs.append(info['pv'])
+
+                if info['pv'][0] == bestmove:
+                    break
 
     @classmethod
     def from_row(cls, row, p):
@@ -108,7 +113,7 @@ class StockfishDepth(Features):
             universal_newlines=True,
             bufsize=1
         )
-        p.stdout.readline() # read info line on init.
+        p.stdout.readline()  # read info line on init.
 
         feature_rows = []
         with click.progressbar(tuple(df.itertuples())) as rows:
@@ -134,7 +139,6 @@ class StockfishDepth(Features):
     @cached_property
     def pvs(self):
         return self.pvs
-
 
 # TODO: how to store scores and pvs?
 # class Stockfish5_500(Stockfish):
