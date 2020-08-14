@@ -73,6 +73,7 @@ class Stockfish10(Stockfish):
 class StockfishDepth(Features):
 
     def __init__(self, fen, p):
+        p.stdin.write('position fen ' + fen + '\n')
         p.stdin.write('go depth 10\n')
 
         board = chess.Board(fen)
@@ -87,10 +88,11 @@ class StockfishDepth(Features):
 
             info = _parse_uci_info_fixed(line.strip(), board)
 
-            self.scores.append(info['score'].relative.score())
-            self.mates.append(info['score'].relative.mate())
-            self.moves.append(info['pv'][0])
-            self.pvs.append(info['pv'])
+            if 'score' in info:
+                self.scores.append(info['score'].relative.score())
+                self.mates.append(info['score'].relative.mate())
+                self.moves.append(info['pv'][0])
+                self.pvs.append(info['pv'])
 
     @classmethod
     def from_row(cls, row, p):
