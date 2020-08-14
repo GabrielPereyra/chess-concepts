@@ -73,6 +73,7 @@ class Stockfish10(Stockfish):
 class StockfishDepth(Features):
 
     def __init__(self, fen, p):
+        p.stdin.write('position fen {}\n'.format(fen))
         p.stdin.write('go depth 10\n')
 
         board = chess.Board(fen)
