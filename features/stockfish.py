@@ -4,10 +4,10 @@ import click
 import chess
 import chess.engine
 import pandas as pd
-from chess.engine import _parse_uci_info
 import subprocess
 
 from features.abstract import Features
+from features.parse_uci_info import _parse_uci_info_fixed
 
 STOCKFISH_PATH = "../Stockfish/src/stockfish"
 EVAL_STOCKFISH_PATH = "../Stockfish\ copy/src/stockfish"
@@ -85,12 +85,13 @@ class StockfishDepth(Features):
             if 'bestmove' in line:
                 break
 
-            info = _parse_uci_info(line.strip(), board)
+            info = _parse_uci_info_fixed(line.strip(), board)
+            print(info)
 
             self.scores.append(info['score'].relative.score())
             self.mates.append(info['score'].relative.mate())
-            self.moves.append(info['pv'][0].uci())
-            self.pvs.append(str([move.uci() for move in info["pv"]]))
+            self.moves.append(info['pv'][0])
+            self.pvs.append(info['pv'])
 
     @classmethod
     def from_row(cls, row, p):
