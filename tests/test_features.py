@@ -4,6 +4,7 @@ import chess.engine
 import features
 import pandas as pd
 from features.stockfish import STOCKFISH_PATH
+import subprocess
 
 
 def test_board_features():
@@ -225,3 +226,21 @@ def test_clock_features():
         "approximate_game_length": 100,
         "relative_time_remaining": 0.3,
     }
+
+
+def test_stockfish_depth_features():
+    p = subprocess.Popen(
+        STOCKFISH_PATH,
+        stdin=subprocess.PIPE,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        universal_newlines=True,
+        bufsize=1
+    )
+    p.stdout.readline() # read info line on init.
+
+    f = features.StockfishDepth(chess.STARTING_FEN, p)
+
+    p.kill()
+
+    assert f.features() == {'mates': [None, None, None, None, None, None, None, None, None, None], 'moves': ['e2e3', 'e2e3', 'e2e3', 'd2d4', 'd2d4', 'e2e4', 'b1c3', 'b1c3', 'b1c3', 'b1c3'], 'pvs': ["['e2e3']", "['e2e3', 'b7b6']", "['e2e3', 'b7b6', 'f1c4']", "['d2d4', 'e7e6', 'e2e3', 'd7d5']", "['d2d4', 'e7e6', 'e2e3', 'd7d5']", "['e2e4', 'b7b6']", "['b1c3', 'd7d5', 'd2d4', 'c7c6', 'd1d3', 'e7e6', 'e2e4', 'd5e4']", "['b1c3', 'd7d5', 'g1f3', 'd5d4', 'c3b5', 'b8c6', 'e2e3', 'd4e3', 'd2e3', 'd8d1', 'e1d1']", "['b1c3', 'd7d5', 'd2d4', 'e7e5', 'e2e4', 'd5e4', 'c1e3', 'b8c6', 'd4e5']", "['b1c3', 'd7d5', 'd2d4', 'c7c6', 'c1f4', 'e7e6', 'e2e3']"], 'scores': [110, 122, 119, 59, 75, 172, 77, 82, 77, 115]}
