@@ -65,16 +65,14 @@ class Stockfish(Features):
 
 
 class Stockfish10(Stockfish):
-
     def __init__(self, fen, engine):
         super().__init__(fen, engine, 10, None)
 
 
 class StockfishDepth(Features):
-
     def __init__(self, fen, p):
-        p.stdin.write('position fen {}\n'.format(fen))
-        p.stdin.write('go depth 10\n')
+        p.stdin.write("position fen {}\n".format(fen))
+        p.stdin.write("go depth 10\n")
 
         board = chess.Board(fen)
 
@@ -82,15 +80,15 @@ class StockfishDepth(Features):
         self.mates = []
         self.moves = []
         self.pvs = []
-        for line in iter(p.stdout.readline, ''):
-            if 'bestmove' in line:
+        for line in iter(p.stdout.readline, ""):
+            if "bestmove" in line:
                 break
 
             info = _parse_uci_info(line.strip(), board)
 
-            self.scores.append(info['score'].relative.score())
-            self.mates.append(info['score'].relative.mate())
-            self.moves.append(info['pv'][0].uci())
+            self.scores.append(info["score"].relative.score())
+            self.mates.append(info["score"].relative.mate())
+            self.moves.append(info["pv"][0].uci())
             self.pvs.append(str([move.uci() for move in info["pv"]]))
 
     @classmethod
@@ -105,9 +103,9 @@ class StockfishDepth(Features):
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
             universal_newlines=True,
-            bufsize=1
+            bufsize=1,
         )
-        p.stdout.readline() # read info line on init.
+        p.stdout.readline()  # read info line on init.
 
         feature_rows = []
         with click.progressbar(tuple(df.itertuples())) as rows:
@@ -133,6 +131,179 @@ class StockfishDepth(Features):
     @cached_property
     def pvs(self):
         return self.pvs
+
+
+class StockfishEval(Features):
+    def __init__(self, fen, p):
+
+        print(fen)
+
+        board = chess.Board(fen)
+        p.stdin.write("position fen {}\n".format(fen))
+        p.stdin.write("eval\n")
+
+        def _parse_score(score):
+            if score == "----":
+                return None
+            else:
+                return float(score)
+
+        for i, line in enumerate(iter(p.stdout.readline, "")):
+
+            print(line)
+
+            if 'Total evaluation: none (in check)' in line:
+                # p.stdout.readline()
+                break
+
+
+            if 'Total evaluation' in line:
+                p.stdout.readline()
+                break
+
+
+            if i >= 3 and i <= 15:
+                term, white, black, total = line.split("|")
+                term = term.strip().lower()
+                white_mg, white_eg = white.split()
+                black_mg, black_eg = black.split()
+                total_mg, total_eg = total.split()
+
+                white_mg = _parse_score(white_mg)
+                white_eg = _parse_score(white_eg)
+                black_mg = _parse_score(black_mg)
+                black_eg = _parse_score(black_eg)
+                total_mg = _parse_score(total_mg)
+                total_eg = _parse_score(total_eg)
+
+                # TODO: how to make these properties
+                if board.turn == chess.WHITE:
+                    setattr(self, "our_{}_mg".format(term), white_mg)
+                    setattr(self, "our_{}_eg".format(term), white_eg)
+                    setattr(self, "their_{}_mg".format(term), black_mg)
+                    setattr(self, "their_{}_eg".format(term), black_eg)
+                    setattr(self, "total_{}_mg".format(term), total_mg)
+                    setattr(self, "total_{}_eg".format(term), total_eg)
+                else:
+                    setattr(self, "our_{}_mg".format(term), black_mg)
+                    setattr(self, "our_{}_eg".format(term), black_eg)
+                    setattr(self, "their_{}_mg".format(term), white_mg)
+                    setattr(self, "their_{}_eg".format(term), white_eg)
+                    setattr(self, "total_{}_mg".format(term), -total_mg)
+                    setattr(self, "total_{}_eg".format(term), -total_eg)
+
+
+    # TODO: create stockfish pipe class so we can share this with StockfishDepth
+    @classmethod
+    def from_row(cls, row, p):
+        return cls(row.fen, p)
+
+    @classmethod
+    def from_df(cls, df):
+        p = subprocess.Popen(
+            STOCKFISH_PATH,
+            stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            universal_newlines=True,
+            bufsize=1,
+        )
+        p.stdout.readline()  # read info line on init.
+
+        feature_rows = []
+        with click.progressbar(tuple(df.itertuples())) as rows:
+            for row in rows:
+                feature_instance = cls.from_row(row, p)
+                feature_rows.append(feature_instance.features())
+
+        p.kill()
+        return pd.DataFrame(feature_rows)
+
+
+import types
+# TODO: disgusting hack because feature class expects dir(cls) to expose all features which only works if they are defined as methods but for StockfishEval, we set them all as attributes in __init__. Need to think about how to refactor this.
+for feature in [
+    "our_bishops_eg",
+    "our_bishops_mg",
+    "our_imbalance_eg",
+    "our_imbalance_mg",
+    "our_initiative_eg",
+    "our_initiative_mg",
+    "our_king safety_eg",
+    "our_king safety_mg",
+    "our_knights_eg",
+    "our_knights_mg",
+    "our_material_eg",
+    "our_material_mg",
+    "our_mobility_eg",
+    "our_mobility_mg",
+    "our_passed_eg",
+    "our_passed_mg",
+    "our_pawns_eg",
+    "our_pawns_mg",
+    "our_queens_eg",
+    "our_queens_mg",
+    "our_rooks_eg",
+    "our_rooks_mg",
+    "our_space_eg",
+    "our_space_mg",
+    "our_threats_eg",
+    "our_threats_mg",
+    "their_bishops_eg",
+    "their_bishops_mg",
+    "their_imbalance_eg",
+    "their_imbalance_mg",
+    "their_initiative_eg",
+    "their_initiative_mg",
+    "their_king safety_eg",
+    "their_king safety_mg",
+    "their_knights_eg",
+    "their_knights_mg",
+    "their_material_eg",
+    "their_material_mg",
+    "their_mobility_eg",
+    "their_mobility_mg",
+    "their_passed_eg",
+    "their_passed_mg",
+    "their_pawns_eg",
+    "their_pawns_mg",
+    "their_queens_eg",
+    "their_queens_mg",
+    "their_rooks_eg",
+    "their_rooks_mg",
+    "their_space_eg",
+    "their_space_mg",
+    "their_threats_eg",
+    "their_threats_mg",
+    "total_bishops_eg",
+    "total_bishops_mg",
+    "total_imbalance_eg",
+    "total_imbalance_mg",
+    "total_initiative_eg",
+    "total_initiative_mg",
+    "total_king safety_eg",
+    "total_king safety_mg",
+    "total_knights_eg",
+    "total_knights_mg",
+    "total_material_eg",
+    "total_material_mg",
+    "total_mobility_eg",
+    "total_mobility_mg",
+    "total_passed_eg",
+    "total_passed_mg",
+    "total_pawns_eg",
+    "total_pawns_mg",
+    "total_queens_eg",
+    "total_queens_mg",
+    "total_rooks_eg",
+    "total_rooks_mg",
+    "total_space_eg",
+    "total_space_mg",
+    "total_threats_eg",
+    "total_threats_mg",
+]:
+
+    setattr(StockfishEval, feature, None)
 
 
 # TODO: how to store scores and pvs?
