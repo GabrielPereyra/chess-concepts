@@ -174,6 +174,112 @@ def test_forks(fen, pv, expected_contains_fork, expected_is_first_move_fork):
 
 
 @pytest.mark.parametrize(
+    "fen, pv, expected_contains_discovered_attack, expected_is_first_move_discovered_attack",
+    [
+        # Tricky discovered attack
+        # https://lichess.org/analysis/4q3/8/8/4k3/4B3/4R1r1/1K4P1/8_w_-_-_0_1
+        ("4q3/8/8/4k3/4B3/4R1r1/1K4P1/8 w - - 0 1", "['e4f3']", True, True),
+        # Trap in french advanced variation, discovered attack on undefended piece of same value as piece attacking it
+        # https://lichess.org/analysis/r1b1kbnr/pp3ppp/4p3/3pP3/3q4/3B4/PP3PPP/RNBQK2R_w_KQkq_-_0_1
+        (
+            "r1b1kbnr/pp3ppp/4p3/3pP3/3q4/3B4/PP3PPP/RNBQK2R w KQkq - 0 1",
+            "['d3b5']",
+            True,
+            True,
+        ),
+        # https://lichess.org/analysis/3rr1k1/pp2bpp1/2p4p/3p2q1/8/P3PPB1/1PP1QP1P/1K1R2R1_w_-_-_0_1
+        (
+            "3rr1k1/pp2bpp1/2p4p/3p2q1/8/P3PPB1/1PP1QP1P/1K1R2R1 w - - 0 1",
+            "['g3c7']",
+            True,
+            True,
+        ),
+        # https://lichess.org/analysis/r3r1k1/pp2bpp1/2p1pn1p/8/2Pq4/2NB4/PP1Q1PPP/R3R1K1_w_-_-_0_1
+        (
+            "r3r1k1/pp2bpp1/2p1pn1p/8/2Pq4/2NB4/PP1Q1PPP/R3R1K1 w - - 0 1",
+            "['d3h7']",
+            True,
+            True,
+        ),
+        # https://lichess.org/analysis/1r1qrbk1/1b3pp1/p1n2n1p/2p1p3/P3P3/2P2N1P/2BBQPP1/R2R1NK1_w_-_-_0_1
+        (
+            "1r1qrbk1/1b3pp1/p1n2n1p/2p1p3/P3P3/2P2N1P/2BBQPP1/R2R1NK1 w - - 0 1",
+            "['d2h6']",
+            True,
+            True,
+        ),
+        # Double check and mate
+        # https://lichess.org/analysis/5rk1/1p1q1ppp/pb3n2/2r1p1B1/4P3/1Q1P1R2/PP2N1PP/R5K1_b_-_-_0_1
+        (
+            "5rk1/1p1q1ppp/pb3n2/2r1p1B1/4P3/1Q1P1R2/PP2N1PP/R5K1 b - - 0 1",
+            "['c5c1']",
+            True,
+            True,
+        ),
+        # Windmill
+        # https://lichess.org/analysis/r3rnk1/pb3pp1/3ppB1p/7q/1P1P4/4N1R1/P4PPP/4R1K1_w_-_-_0_1
+        (
+            "r3rnk1/pb3pp1/3ppB1p/7q/1P1P4/4N1R1/P4PPP/4R1K1 w - - 0 1",
+            "['g3g7', 'g8h8', 'g7f7', 'h8g8']",
+            True,
+            False,
+        ),
+        # Check discovering an attack on undefended bishop by a queen
+        # https://lichess.org/analysis/r4r2/pbpp2bk/1p2p1p1/7p/4NB1P/qP1P1QP1/2P2P2/3RR1K1_w_-_-_0_1
+        (
+            "r4r2/pbpp2bk/1p2p1p1/7p/4NB1P/qP1P1QP1/2P2P2/3RR1K1 w - - 0 1",
+            "['e4g5']",
+            True,
+            True,
+        ),
+        # Moving a pawn to attack a rook discovers a check by a our rook
+        # https://lichess.org/analysis/6r1/5p2/r1p1p3/B3np2/RP5k/2R4P/5P2/5K2_w_-_-_0_1
+        ("6r1/5p2/r1p1p3/B3np2/RP5k/2R4P/5P2/5K2 w - - 0 1", "['b4b5']", True, True,),
+        # Almost like a trap in french advanced variation but discovered attack on a defended piece of the same value
+        # as the attacking piece
+        # https://lichess.org/analysis/r1b1kbnr/pp3ppp/4p3/2ppP3/3q4/3B4/PP3PPP/RNBQK2R_w_KQkq_-_0_1
+        (
+            "r1b1kbnr/pp3ppp/4p3/2ppP3/3q4/3B4/PP3PPP/RNBQK2R w KQkq - 0 1",
+            "['d3b5']",
+            False,
+            False,
+        ),
+        # Moving the bishop makes results in a rook that was behind it to attack a defended pawn
+        # https://lichess.org/analysis/q2rr1k1/pp2bpp1/2p4p/3p4/8/P3PPB1/1PP1QP1P/1K1R2R1_w_-_-_0_1
+        (
+            "q2rr1k1/pp2bpp1/2p4p/3p4/8/P3PPB1/1PP1QP1P/1K1R2R1 w - - 0 1",
+            "['g3c7']",
+            False,
+            False,
+        ),
+        # Check discovering an attack on a defended bishop by a queen
+        # https://lichess.org/analysis/1r3r2/pbpp2bk/1p2p1p1/7p/4NB1P/qP1P1QP1/2P2P2/3RR1K1_w_-_-_0_1
+        (
+            "1r3r2/pbpp2bk/1p2p1p1/7p/4NB1P/qP1P1QP1/2P2P2/3RR1K1 w - - 0 1",
+            "['e4g5']",
+            False,
+            False,
+        ),
+    ],
+)
+def test_discovered_attack(
+    fen,
+    pv,
+    expected_contains_discovered_attack,
+    expected_is_first_move_discovered_attack,
+):
+    f = features.Motives(fen, pv)
+    assert (
+        f.features()["contains_discovered_attack"]
+        == expected_contains_discovered_attack
+    )
+    assert (
+        f.features()["is_first_move_discovered_attack"]
+        == expected_is_first_move_discovered_attack
+    )
+
+
+@pytest.mark.parametrize(
     "fen, pv, expected",
     [
         # https://lichess.org/analysis/6kq/8/8/4n3/4p3/8/5P2/4RBK1_b_-_-_0_1
@@ -235,12 +341,39 @@ def test_stockfish_depth_features():
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         universal_newlines=True,
-        bufsize=1
+        bufsize=1,
     )
-    p.stdout.readline() # read info line on init.
+    p.stdout.readline()  # read info line on init.
 
     f = features.StockfishDepth(chess.STARTING_FEN, p)
 
     p.kill()
 
-    assert f.features() == {'mates': [None, None, None, None, None, None, None, None, None, None], 'moves': ['e2e3', 'e2e3', 'e2e3', 'd2d4', 'd2d4', 'e2e4', 'b1c3', 'b1c3', 'b1c3', 'b1c3'], 'pvs': ["['e2e3']", "['e2e3', 'b7b6']", "['e2e3', 'b7b6', 'f1c4']", "['d2d4', 'e7e6', 'e2e3', 'd7d5']", "['d2d4', 'e7e6', 'e2e3', 'd7d5']", "['e2e4', 'b7b6']", "['b1c3', 'd7d5', 'd2d4', 'c7c6', 'd1d3', 'e7e6', 'e2e4', 'd5e4']", "['b1c3', 'd7d5', 'g1f3', 'd5d4', 'c3b5', 'b8c6', 'e2e3', 'd4e3', 'd2e3', 'd8d1', 'e1d1']", "['b1c3', 'd7d5', 'd2d4', 'e7e5', 'e2e4', 'd5e4', 'c1e3', 'b8c6', 'd4e5']", "['b1c3', 'd7d5', 'd2d4', 'c7c6', 'c1f4', 'e7e6', 'e2e3']"], 'scores': [110, 122, 119, 59, 75, 172, 77, 82, 77, 115]}
+    assert f.features() == {
+        "mates": [None, None, None, None, None, None, None, None, None, None],
+        "moves": [
+            "e2e3",
+            "e2e3",
+            "e2e3",
+            "d2d4",
+            "d2d4",
+            "e2e4",
+            "b1c3",
+            "b1c3",
+            "b1c3",
+            "b1c3",
+        ],
+        "pvs": [
+            "['e2e3']",
+            "['e2e3', 'b7b6']",
+            "['e2e3', 'b7b6', 'f1c4']",
+            "['d2d4', 'e7e6', 'e2e3', 'd7d5']",
+            "['d2d4', 'e7e6', 'e2e3', 'd7d5']",
+            "['e2e4', 'b7b6']",
+            "['b1c3', 'd7d5', 'd2d4', 'c7c6', 'd1d3', 'e7e6', 'e2e4', 'd5e4']",
+            "['b1c3', 'd7d5', 'g1f3', 'd5d4', 'c3b5', 'b8c6', 'e2e3', 'd4e3', 'd2e3', 'd8d1', 'e1d1']",
+            "['b1c3', 'd7d5', 'd2d4', 'e7e5', 'e2e4', 'd5e4', 'c1e3', 'b8c6', 'd4e5']",
+            "['b1c3', 'd7d5', 'd2d4', 'c7c6', 'c1f4', 'e7e6', 'e2e3']",
+        ],
+        "scores": [110, 122, 119, 59, 75, 172, 77, 82, 77, 115],
+    }

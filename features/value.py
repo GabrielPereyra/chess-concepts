@@ -3,20 +3,7 @@ from functools import cached_property
 import chess
 
 from features.abstract import Features
-
-
-def is_higher_value(a, b):
-    piece_type_to_value = {
-        None: 0,
-        0: 0,
-        1: 1,
-        2: 3,
-        3: 3,
-        4: 5,
-        5: 8,
-        6: 10,
-    }
-    return piece_type_to_value[a] > piece_type_to_value[b]
+from features.helpers import is_higher_value
 
 
 def is_attacked_by_lower_value(board, color, square):
