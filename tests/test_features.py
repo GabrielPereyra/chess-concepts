@@ -313,6 +313,55 @@ def test_skewer(fen, pv, expected_contains_skewer, expected_is_first_move_skewer
 
 
 @pytest.mark.parametrize(
+    "fen, pv, expected_contains_pin, expected_is_first_move_pin",
+    [
+        # Absolute pin
+        # https://lichess.org/analysis/1rk5/1p6/4n3/8/4B3/8/3R3P/3K4_w_-_-_0_1
+        ("1rk5/1p6/4n3/8/4B3/8/3R3P/3K4 w - - 0 1", "['e4f5']", True, True,),
+        # Relative pin
+        # https://lichess.org/analysis/1kr5/4p3/4n3/8/4B3/8/3R3P/3K4_w_-_-_0_1
+        ("1kr5/4p3/4n3/8/4B3/8/3R3P/3K4 w - - 0 1", "['e4f5']", True, True,),
+        # Relative pin in opening phase
+        # https://lichess.org/analysis/r1bqkbnr/pppp1ppp/2n5/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R_b_KQkq_-_0_1
+        (
+            "r1bqkbnr/pppp1ppp/2n5/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R b KQkq - 0 1",
+            "['d7d6', 'c2c3', 'c8g4']",
+            True,
+            False,
+        ),
+        # Pin called a partial pin because the pinned piece can still move along the line of the attack
+        # https://lichess.org/analysis/4k3/1p6/8/4q3/8/8/1P6/3R1K2_w_-_-_0_1
+        ("4k3/1p6/8/4q3/8/8/1P6/3R1K2 w - - 0 1", "['d1e1']", True, True,),
+        # Not a pin because it is skewer
+        # https://lichess.org/analysis/1kn5/4p3/4r3/8/4B3/8/3R3P/3K4_w_-_-_0_1
+        ("1kn5/4p3/4r3/8/4B3/8/3R3P/3K4 w - - 0 1", "['e4f5']", False, False,),
+        # Not a pin because the attacked piece can capture the attacker of the same value
+        # https://lichess.org/analysis/1kq5/1pp5/p3b3/8/8/8/5NBP/5QK1_w_-_-_0_1
+        ("1kq5/1pp5/p3b3/8/8/8/5NBP/5QK1 w - - 0 1", "['g2h3']", False, False,),
+        # Not a pin because the attacked piece can capture the attacker of the greater value
+        # https://lichess.org/analysis/1kq5/1pp5/p3b3/8/8/8/5NQP/5BK1_w_-_-_0_1
+        ("1kq5/1pp5/p3b3/8/8/8/5NQP/5BK1 w - - 0 1", "['g2h3']", False, False,),
+        # Not a pin because the attacked piece can capture undefended attacker of the lower value
+        # https://lichess.org/analysis/2k5/1pp5/p3q3/8/8/8/6BP/6KQ_w_-_-_0_1
+        ("2k5/1pp5/p3q3/8/8/8/6BP/6KQ w - - 0 1", "['g2h3']", False, False,),
+        # Not a pin because it is skewer
+        # https://lichess.org/analysis/r1bqkbnr/ppp2ppp/2np4/4p3/4P3/2P2N2/PP1PBPPP/RNBQK2R_b_KQkq_-_0_1
+        (
+            "r1bqkbnr/ppp2ppp/2np4/4p3/4P3/2P2N2/PP1PBPPP/RNBQK2R b KQkq - 0 1",
+            "['c8g4']",
+            False,
+            False,
+        ),
+        #
+    ],
+)
+def test_pin(fen, pv, expected_contains_pin, expected_is_first_move_pin):
+    f = features.Motives(fen, pv)
+    assert f.features()["contains_pin"] == expected_contains_pin
+    assert f.features()["is_first_move_pin"] == expected_is_first_move_pin
+
+
+@pytest.mark.parametrize(
     "fen, pv, our_expected, their_expected",
     [
         # https://lichess.org/analysis/6kq/8/8/4n3/4p3/8/5P2/4RBK1_b_-_-_0_1
