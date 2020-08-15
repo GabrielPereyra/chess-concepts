@@ -8,8 +8,6 @@ from features.helpers import (
     is_lower_value,
     is_lower_equal_value,
     is_greater_value,
-    is_greater_equal_value,
-    is_same_value,
 )
 
 
@@ -125,8 +123,8 @@ def is_pin(fen: str, move: chess.Move) -> bool:
         attacked_has_lower_equal_value = is_lower_equal_value(
             board.piece_type_at(attacked), board.piece_type_at(attacker)
         )
-        if (not attacker_is_attacked or attacker_is_defended) and (
-            not attacked_has_lower_equal_value or not attacked_attacks_attacker
+        if (not attacker_is_attacked or attacker_is_defended) and not (
+            attacked_attacks_attacker and attacked_has_lower_equal_value
         ):
             board_without_attacked = board.copy()
             board_without_attacked.remove_piece_at(attacked)
@@ -198,6 +196,19 @@ class Motives(Features):
     def from_row(cls, row):
         return cls(row.fen, row.best_pv)
 
+    @staticmethod
+    def _contains_simple_motive(fen, pv, motive_finder):
+        board = chess.Board(fen)
+        for i in range(0, len(pv), 2):
+            our_move = pv[i]
+            if motive_finder(board.fen(), our_move):
+                return True
+            board.push(our_move)
+            if i + 1 < len(pv):
+                their_move = pv[i + 1]
+                board.push(their_move)
+        return False
+
     @cached_property
     def contains_fork(self):
         return contains_fork(self.board.fen(), self.pv)
@@ -208,58 +219,28 @@ class Motives(Features):
 
     @cached_property
     def contains_discovered_attack(self):
-        board = self.board.copy()
-        for i in range(0, len(self.pv), 2):
-            our_move = self.pv[i]
-            if is_discovered_attack(board.fen(), our_move):
-                return True
-            board.push(our_move)
-            if i + 1 < len(self.pv):
-                their_move = self.pv[i + 1]
-                board.push(their_move)
-        return False
+        return self._contains_simple_motive(
+            self.board.fen(), self.pv, is_discovered_attack
+        )
 
     @cached_property
     def is_first_move_discovered_attack(self):
-        return is_discovered_attack(self.board.fen(), self.pv[0])
+        return self._contains_simple_motive(
+            self.board.fen(), self.pv[:1], is_discovered_attack
+        )
 
     @cached_property
     def contains_skewer(self):
-        board = self.board.copy()
-        for i in range(0, len(self.pv), 2):
-            our_move = self.pv[i]
-            if is_skewer(board.fen(), our_move):
-                return True
-            board.push(our_move)
-            if i + 1 < len(self.pv):
-                their_move = self.pv[i + 1]
-                board.push(their_move)
-        return False
+        return self._contains_simple_motive(self.board.fen(), self.pv, is_skewer)
 
     @cached_property
     def is_first_move_skewer(self):
-        return is_skewer(self.board.fen(), self.pv[0])
+        return self._contains_simple_motive(self.board.fen(), self.pv[:1], is_skewer)
 
     @cached_property
     def contains_pin(self):
-        board = self.board.copy()
-        for i in range(0, len(self.pv), 2):
-            our_move = self.pv[i]
-            if is_pin(board.fen(), our_move):
-                return True
-            board.push(our_move)
-            if i + 1 < len(self.pv):
-                their_move = self.pv[i + 1]
-                board.push(their_move)
-        return False
+        return self._contains_simple_motive(self.board.fen(), self.pv, is_pin)
 
     @cached_property
     def is_first_move_pin(self):
-        return is_pin(self.board.fen(), self.pv[0])
-
-
-if __name__ == "__main__":
-    fen = "1kq5/1pp5/p3b3/8/8/8/5NQP/5BK1 w - - 0 1"
-    move = chess.Move.from_uci("g2h3")
-    res = is_pin(fen, move)
-    print(res)
+        return self._contains_simple_motive(self.board.fen(), self.pv[:1], is_pin)
