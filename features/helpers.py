@@ -62,3 +62,10 @@ def get_attacking(
             ):
                 res.add((attacker_sq, square))
     return res
+
+
+def count_material(board: chess.Board, color: bool) -> int:
+    return sum(
+        PIECE_TYPE_VALUE[piece_type] * len(board.pieces(piece_type, color))
+        for piece_type in chess.PIECE_TYPES
+    )

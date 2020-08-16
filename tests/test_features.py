@@ -362,6 +362,54 @@ def test_pin(fen, pv, expected_contains_pin, expected_is_first_move_pin):
 
 
 @pytest.mark.parametrize(
+    "fen, pv, expected_contains_sacrifice, expected_is_first_move_sacrifice",
+    [
+        # king's gambit
+        # https://lichess.org/analysis/rnbqkbnr/pppp1ppp/8/4p3/4P3/8/PPPP1PPP/RNBQKBNR_w_KQkq_-_0_1
+        (
+            "rnbqkbnr/pppp1ppp/8/4p3/4P3/8/PPPP1PPP/RNBQKBNR w KQkq - 0 1",
+            "['f2f4']",
+            True,
+            True,
+        ),
+        # greek's gift
+        # https://lichess.org/analysis/r1bq1rk1/pp2nppp/2n1p3/3pP3/3P4/2PB1N2/P4PPP/R1BQK2R_w_KQq_-_0_1
+        (
+            "r1bq1rk1/pp2nppp/2n1p3/3pP3/3P4/2PB1N2/P4PPP/R1BQK2R w KQq - 0 1",
+            "['d3h7']",
+            True,
+            True,
+        ),
+        # similar to greek's gift but not a sacrifice since the captured piece has same value as the capturing piece
+        # https://lichess.org/analysis/r1bq1rk1/pp3ppn/2n1p3/3pP3/3P4/2PB1N2/P4PPP/R1BQK2R_w_KQq_-_0_1
+        (
+            "r1bq1rk1/pp3ppn/2n1p3/3pP3/3P4/2PB1N2/P4PPP/R1BQK2R w KQq - 0 1",
+            "['d3h7']",
+            False,
+            False,
+        ),
+        # not a sacrifice because we can recapture if opponent captures
+        # https://lichess.org/analysis/2r3k1/2r2ppp/8/8/2B5/8/5PPP/2R2RK1_b_-_-_0_1
+        ("2r3k1/2r2ppp/8/8/2B5/8/5PPP/2R2RK1 b - - 0 1", "['c7c4']", False, False,),
+        # a sacrifice, we sacrifice a rook but if opponent accepts then we can check mate
+        # https://lichess.org/analysis/2rr2k1/5ppp/8/8/2B5/5R2/5PPP/2R3K1_b_-_-_0_1
+        ("2rr2k1/5ppp/8/8/2B5/5R2/5PPP/2R3K1 b - - 0 1", "['c8c4']", True, True,),
+        # not a sacrifice because the piece we capture is not defended
+        # https://lichess.org/analysis/2r1r1k1/5ppp/8/8/2B5/5R2/5PPP/3R2K1_b_-_-_0_1
+        ("2r1r1k1/5ppp/8/8/2B5/5R2/5PPP/3R2K1 b - - 0 1", "['c8c4']", False, False,),
+        # sacrifice, main queen's gambit line
+        (chess.STARTING_FEN, "['d2d4', 'd7d5', 'c2c4', 'e7e6']", True, False,),
+    ],
+)
+def test_sacrifice(
+    fen, pv, expected_contains_sacrifice, expected_is_first_move_sacrifice
+):
+    f = features.Motives(fen, pv)
+    assert f.features()["contains_sacrifice"] == expected_contains_sacrifice
+    assert f.features()["is_first_move_sacrifice"] == expected_is_first_move_sacrifice
+
+
+@pytest.mark.parametrize(
     "fen, pv, our_expected, their_expected",
     [
         # https://lichess.org/analysis/6kq/8/8/4n3/4p3/8/5P2/4RBK1_b_-_-_0_1
