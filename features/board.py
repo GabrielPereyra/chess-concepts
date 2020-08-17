@@ -3,6 +3,7 @@ from functools import cached_property
 import chess
 
 from features.abstract import Features
+from features.helpers import count_material
 
 
 class Board(Features):
@@ -189,17 +190,8 @@ class Board(Features):
 
     @cached_property
     def material_advantage(self):
-        return (
-            self.our_queens * 9
-            + self.our_rooks * 5
-            + self.our_bishops * 3
-            + self.our_knights * 3
-            + self.our_pawns
-            - self.their_queens * 9
-            - self.their_rooks * 5
-            - self.their_bishops * 3
-            - self.their_knights * 3
-            - self.their_pawns
+        return count_material(self.board, self.turn) - count_material(
+            self.board, not self.turn
         )
 
     @cached_property

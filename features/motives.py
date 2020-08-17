@@ -9,6 +9,7 @@ from features.helpers import (
     is_lower_equal_value,
     is_greater_value,
 )
+from features.helpers import count_material, PIECE_TYPE_VALUE
 
 
 def contains_fork(fen, pv):
@@ -185,6 +186,45 @@ def is_skewer(fen: str, move: chess.Move) -> bool:
     return False
 
 
+def is_sacrifice(fen: str, move: chess.Move) -> bool:
+    """
+    A move is a sacrifice when the moved piece either moves to an empty square or captures a piece of a lower value
+    and then there exists a series of captures at the square our first moved piece moved to, and after that series,
+    our opponent gains material relatively to material balance before our first move.
+
+    NOTE: Wikipedia proposed a division between sham and real sacrifices:
+    https://en.wikipedia.org/wiki/Sacrifice_(chess)#Types_of_sacrifice
+    maybe something to consider for the future.
+    """
+
+    board = chess.Board(fen)
+    our_color = board.turn
+    their_color = not board.turn
+
+    material_advantage_before = count_material(board, our_color) - count_material(
+        board, their_color
+    )
+    board.push(move)
+    while True:
+        next_move, lowest_value_capture = None, None
+
+        for candidate_move in board.legal_moves:
+            if candidate_move.to_square != move.to_square:
+                continue
+            value = PIECE_TYPE_VALUE[board.piece_type_at(candidate_move.from_square)]
+            if next_move is None or value < lowest_value_capture:
+                next_move = candidate_move
+                lowest_value_capture = value
+        if next_move is None:
+            break
+        board.push(next_move)
+
+    material_advantage_after = count_material(board, our_color) - count_material(
+        board, their_color
+    )
+    return material_advantage_after < material_advantage_before
+
+
 class Motives(Features):
     def __init__(self, fen, pv):
         self.board = chess.Board(fen)
@@ -244,3 +284,11 @@ class Motives(Features):
     @cached_property
     def is_first_move_pin(self):
         return self._contains_simple_motive(self.board.fen(), self.pv[:1], is_pin)
+
+    @cached_property
+    def contains_sacrifice(self):
+        return self._contains_simple_motive(self.board.fen(), self.pv, is_sacrifice)
+
+    @cached_property
+    def is_first_move_sacrifice(self):
+        return self._contains_simple_motive(self.board.fen(), self.pv[:1], is_sacrifice)
