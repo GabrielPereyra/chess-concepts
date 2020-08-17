@@ -70,6 +70,14 @@ class BestMove(Features):
         """From the perspective of the current player, i.e. current player's pawns move up the board."""
         return not self.best_move_is_horizontal and not self.best_move_is_forward
 
+    @cached_property
+    def best_move_from_square(self):
+        return self.move.from_square
+
+    @cached_property
+    def best_move_to_square(self):
+        return self.move.to_square
+
     # @cached_property
     # def best_move_was_defended(self):
     #     return self.board.is_attacked_by(self.board.turn, self.move.from_square)

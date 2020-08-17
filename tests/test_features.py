@@ -49,10 +49,9 @@ def test_board_features():
     }
 
 
-# TODO: Fix this.
-@pytest.mark.xfail
 def test_best_move_features():
-    f = features.BestMove(chess.STARTING_FEN, "e2e4")
+    move_uci = "e2e4"
+    f = features.BestMove(chess.STARTING_FEN, move_uci)
     assert f.features() == {
         "best_move_is_attacked": False,
         "best_move_is_capture": False,
@@ -61,6 +60,11 @@ def test_best_move_features():
         "best_move_is_en_passant": False,
         "best_move_is_promotion": False,
         "best_move_piece_type": 1,
+        "best_move_is_backward": False,
+        "best_move_is_forward": True,
+        "best_move_is_horizontal": False,
+        "best_move_from_square": chess.Move.from_uci(move_uci).from_square,
+        "best_move_to_square": chess.Move.from_uci(move_uci).to_square,
     }
 
 
