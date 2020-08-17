@@ -189,19 +189,26 @@ class Board(Features):
         return chess.popcount(self.board.occupied)
 
     @cached_property
+    def our_material_count(self):
+        return count_material(self.board, self.turn)
+
+    @cached_property
+    def their_material_count(self):
+        return count_material(self.board, not self.turn)
+
+    @cached_property
+    def material_count(self):
+        return self.our_material_count + self.their_material_count
+
+    @cached_property
     def material_advantage(self):
-        return count_material(self.board, self.turn) - count_material(
-            self.board, not self.turn
-        )
+        return self.our_material_count - self.their_material_count
 
     @cached_property
-    def is_opening(self):
-        return self.fullmove_number < 10
-
-    @cached_property
-    def is_endgame(self):
-        return self.our_piece_count < 8 and self.their_piece_count < 8
-
-    @cached_property
-    def is_midgame(self):
-        return not self.is_opening and not self.is_endgame
+    def phase(self):
+        if self.fullmove_number < 10:
+            return 0 # opening
+        elif self.material_count < 36:
+            return 1 # endgame
+        else:
+            return 2 # midgame
