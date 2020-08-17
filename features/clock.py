@@ -38,4 +38,20 @@ class Clock(Features):
 
         return self.clock / self.approximate_game_length
 
-    # TODO: time_control name (hyper, bullet, rapid, classical)
+    # TODO: rename lichess time-control to time-control-string?
+    @cached_property
+    def time_control_name(self):
+        if self.time_control == "-":
+            return None
+        s, i = self.time_control.split("+")
+        s = int(s)
+        if s < 30:
+            return 'ultra'
+        if s < 180:
+            return 'bullet'
+        if s < 480:
+            return 'blitz'
+        if s < 1200:
+            return 'rapid'
+        else:
+            return 'classical'

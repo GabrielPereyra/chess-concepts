@@ -7,3 +7,4 @@ from features.stockfish import Stockfish10, StockfishDepth, StockfishEval
 from features.value import Value
 from features.clock import Clock
 from features.motives import Motives
+from features.opening import Opening

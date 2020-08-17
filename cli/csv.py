@@ -82,27 +82,20 @@ def winning_chances(score, prev_score, turn):
     prev_winning_chances = score_to_winning_chances(prev_score)
     winning_chances_loss = -(winning_chances - prev_winning_chances) / 2
 
-    is_correct = False
-    is_inaccurate = False
-    is_mistake = False
-    is_blunder = False
     if winning_chances_loss < 0.025:
-        is_correct = True
+        move_evaluation_type = 0 # correct
     elif winning_chances_loss < 0.06:
-        is_inaccurate = True
+        move_evaluation_type = 1 # inaccurate
     elif winning_chances_loss < 0.14:
-        is_mistake = True
+        move_evaluation_type = 2 # mistake
     else:
-        is_blunder = True
+        move_evaluation_type = 3 # blunder
 
     return {
         "winning_chances": winning_chances,
         "prev_winning_chances": prev_winning_chances,
         "winning_chances_loss": winning_chances_loss,
-        "is_correct": is_correct,
-        "is_inaccurate": is_inaccurate,
-        "is_mistake": is_mistake,
-        "is_blunder": is_blunder,
+        "move_evaluation_type": move_evaluation_type,
     }
 
 
@@ -136,7 +129,7 @@ def game_to_rows(game):
             "opening": game.headers["Opening"],
             "eco": game.headers["ECO"],
             "game_id": game.headers["Site"].split("/")[-1],
-            "time_control": game.headers["TimeControl"],
+            "time_control_string": game.headers["TimeControl"],
             "fen": board.fen(),
             "move": move.uci(),
             "prev_move": prev_move,
