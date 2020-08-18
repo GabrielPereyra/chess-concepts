@@ -1,5 +1,3 @@
-from enum import Enum
-
 import chess
 
 PIECE_TYPE_VALUE = {
@@ -12,18 +10,6 @@ PIECE_TYPE_VALUE = {
     5: 9,
     6: 10,
 }
-
-
-class GamePhase(Enum):
-    OPENING = 0
-    ENDGAME = 1
-    MIDDLEGAME = 2
-
-
-class PositionOpenness(Enum):
-    OPEN = 0
-    SEMI_OPEN = 1
-    CLOSED = 2
 
 
 def square_from_name(square_name):

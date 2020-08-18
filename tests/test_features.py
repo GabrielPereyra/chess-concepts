@@ -6,7 +6,7 @@ import pandas as pd
 from features.stockfish import STOCKFISH_PATH
 from features.best_move import Tactic
 from features.helpers import square_from_name
-from features.helpers import PositionOpenness
+from features.board import GamePhase, PositionOpenness
 import subprocess
 
 
@@ -46,9 +46,18 @@ def test_board_features():
         "their_piece_count": 16,
         "their_queens": 1,
         "their_rooks": 2,
-        "is_opening": True,
-        "is_endgame": False,
-        "is_midgame": False,
+        "endgame_type": None,
+        "material_count": 98,
+        "our_majors": 3,
+        "our_material_count": 49,
+        "our_minors": 4,
+        "our_non_pawn_pieces": 8,
+        "their_majors": 3,
+        "their_material_count": 49,
+        "their_minors": 4,
+        "their_non_pawn_pieces": 8,
+        "phase": GamePhase.OPENING,
+        "position_openness": PositionOpenness.CLOSED,
     }
 
 
