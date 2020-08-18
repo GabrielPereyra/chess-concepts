@@ -4,6 +4,7 @@ import chess
 
 from features.abstract import Features
 from features.helpers import count_material
+from features.helpers import GamePhase
 
 
 class Board(Features):
@@ -207,8 +208,7 @@ class Board(Features):
     @cached_property
     def phase(self):
         if self.fullmove_number < 10:
-            return 0 # opening
-        elif self.material_count < 36:
-            return 1 # endgame
-        else:
-            return 2 # midgame
+            return GamePhase.OPENING
+        if self.material_count < 36:
+            return GamePhase.ENDGAME
+        return GamePhase.MIDDLEGAME

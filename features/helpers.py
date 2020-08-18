@@ -1,3 +1,5 @@
+from enum import Enum
+
 import chess
 
 PIECE_TYPE_VALUE = {
@@ -10,6 +12,12 @@ PIECE_TYPE_VALUE = {
     5: 9,
     6: 10,
 }
+
+
+class GamePhase(Enum):
+    OPENING = 0
+    ENDGAME = 1
+    MIDDLEGAME = 2
 
 
 def is_greater_value(a, b):
