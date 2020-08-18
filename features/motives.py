@@ -229,6 +229,9 @@ def is_sacrifice(fen: str, move: chess.Move) -> bool:
 
 
 class Motives(Features):
+
+    csvs = ['lichess', 'stockfish10']
+
     def __init__(self, fen, pv):
         self.board = chess.Board(fen)
         self.pv = [chess.Move.from_uci(move) for move in eval(pv)]
@@ -252,19 +255,19 @@ class Motives(Features):
                 board.push(their_move)
         return False
 
-    @cached_property
-    def contains_fork(self):
-        return contains_fork(self.board.fen(), self.pv)
+    # @cached_property
+    # def contains_fork(self):
+    #     return contains_fork(self.board.fen(), self.pv)
 
     @cached_property
     def is_first_move_fork(self):
         return contains_fork(self.board.fen(), self.pv[:3])
 
-    @cached_property
-    def contains_discovered_attack(self):
-        return self._contains_simple_motive(
-            self.board.fen(), self.pv, is_discovered_attack
-        )
+    # @cached_property
+    # def contains_discovered_attack(self):
+    #     return self._contains_simple_motive(
+    #         self.board.fen(), self.pv, is_discovered_attack
+    #     )
 
     @cached_property
     def is_first_move_discovered_attack(self):
@@ -272,25 +275,25 @@ class Motives(Features):
             self.board.fen(), self.pv[:1], is_discovered_attack
         )
 
-    @cached_property
-    def contains_skewer(self):
-        return self._contains_simple_motive(self.board.fen(), self.pv, is_skewer)
+    # @cached_property
+    # def contains_skewer(self):
+    #     return self._contains_simple_motive(self.board.fen(), self.pv, is_skewer)
 
     @cached_property
     def is_first_move_skewer(self):
         return self._contains_simple_motive(self.board.fen(), self.pv[:1], is_skewer)
 
-    @cached_property
-    def contains_pin(self):
-        return self._contains_simple_motive(self.board.fen(), self.pv, is_pin)
+    # @cached_property
+    # def contains_pin(self):
+    #     return self._contains_simple_motive(self.board.fen(), self.pv, is_pin)
 
     @cached_property
     def is_first_move_pin(self):
         return self._contains_simple_motive(self.board.fen(), self.pv[:1], is_pin)
 
-    @cached_property
-    def contains_sacrifice(self):
-        return self._contains_simple_motive(self.board.fen(), self.pv, is_sacrifice)
+    # @cached_property
+    # def contains_sacrifice(self):
+    #     return self._contains_simple_motive(self.board.fen(), self.pv, is_sacrifice)
 
     @cached_property
     def is_first_move_sacrifice(self):
