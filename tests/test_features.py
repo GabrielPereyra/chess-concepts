@@ -836,3 +836,16 @@ def test_stockfish_eval_features():
         "total_threats_eg": 0.0,
         "total_threats_mg": 0.0,
     }
+
+def test_features_list():
+    df = pd.DataFrame(
+        [
+            {
+                "fen": chess.STARTING_FEN,
+                "best_move": "e2e4",
+                "best_pv": "['e2e4', 'e7e5', 'g1f3', 'b8c6', 'f1b5', 'a7a6', 'b5c6', 'd7c6']",
+            }
+        ]
+    )
+    df = features.FeatureList([features.Board, features.BestMove, features.BestPV]).from_df(df)
+    assert len(df.columns) == 72

@@ -8,3 +8,4 @@ from features.value import Value
 from features.clock import Clock
 from features.motives import Motives
 from features.opening import Opening
+from features.abstract import FeatureList
