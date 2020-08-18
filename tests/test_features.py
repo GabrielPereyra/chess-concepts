@@ -368,6 +368,14 @@ def test_fork(fen, pv, expected_contains_fork, expected_is_first_move_fork):
         # Not a discovered attack because capturing the knight with check doesn't uncover any new attacker
         # https://lichess.org/analysis/8/8/8/6P1/p3kp2/P2R4/8/2r1N1K1_b_-_-_0_1
         ("8/8/8/6P1/p3kp2/P2R4/8/2r1N1K1 b - - 0 1", "['c1e1']", False, False,),
+        # Discovered attack, bishop captures a pawn and discovers our rook attacking their queen
+        # https://lichess.org/analysis/r2q1rk1/4p1bp/2p3p1/pp2P2n/8/2NB3Q/PPP2PP1/2KR3R_w_-_-_0_1
+        (
+            "r2q1rk1/4p1bp/2p3p1/pp2P2n/8/2NB3Q/PPP2PP1/2KR3R w - - 0 1",
+            "['d3g6']",
+            True,
+            True,
+        ),
     ],
 )
 def test_discovered_attack(
@@ -410,6 +418,83 @@ def test_discovered_attack(
         # It's almost the skewer but the attacked piece can capture the attacking piece because it is undefended
         # https://lichess.org/analysis/3b1rk1/5p1p/6pq/4Q3/8/7P/5PP1/R5K1_b_-_-_0_1
         ("3b1rk1/5p1p/6pq/4Q3/8/7P/5PP1/R5K1 b - - 0 1", "['d8f6']", False, False,),
+        # Not a skewer, rook gives a check but doesn't skewer anything behind the king
+        # https://lichess.org/analysis/6k1/4Rpbp/p5p1/8/2pr4/7P/PP3PP1/3R2K1_w_-_-_0_1
+        ("6k1/4Rpbp/p5p1/8/2pr4/7P/PP3PP1/3R2K1 w - - 0 1", "['e7e8']", False, False),
+        # It is a skewer, rook attack kings and skewers the rook behind it, but the move
+        # is also a checkmate
+        # https://lichess.org/analysis/rn3k1r/ppp3pp/3N1p2/4R3/P1B5/5b2/1P3PPP/R1B3K1_w_-_-_0_1
+        (
+            "rn3k1r/ppp3pp/3N1p2/4R3/P1B5/5b2/1P3PPP/R1B3K1 w - - 0 1",
+            "['e5e8']",
+            True,
+            True,
+        ),
+        # Not a skewer, rook attacks the king and nothing hides behind the king
+        # https://lichess.org/analysis/5r1k/1bp1n2p/p5pB/4q3/1p1PP3/P7/1P2N1PP/3R1R1K_w_-_-_0_1
+        (
+            "5r1k/1bp1n2p/p5pB/4q3/1p1PP3/P7/1P2N1PP/3R1R1K w - - 0 1",
+            "['f1f8']",
+            False,
+            False,
+        ),
+        # Not a skewer, queen just gives a check
+        # https://lichess.org/analysis/2r2rk1/p2b2pp/3p4/q3p3/3Pp3/2N3P1/PP3P1P/R2Q1RK1_w_-_-_0_1
+        (
+            "2r2rk1/p2b2pp/3p4/q3p3/3Pp3/2N3P1/PP3P1P/R2Q1RK1 w - - 0 1",
+            "['d1b3']",
+            False,
+            False,
+        ),
+        # Not a skewer, rook attacks a pawn and it's probably impossible to make a skewer attacking a pawn
+        # https://lichess.org/analysis/2r2rk1/p2b2pp/3p4/q3p3/3Pp3/2N3P1/PP3P1P/R2Q1RK1_w_-_-_0_1
+        (
+            "2r2rk1/p2b2pp/3p4/q3p3/3Pp3/2N3P1/PP3P1P/R2Q1RK1 w - - 0 1",
+            "['f1e1']",
+            False,
+            False,
+        ),
+        # It is a skewer, rook attacks a queen and when the queen moves, it uncovers attack on their rook
+        # https://lichess.org/analysis/2r2r1k/p5pp/3p1q2/3Q4/4R3/2N3Pb/PP3P1P/R5K1_w_-_-_0_1
+        (
+            "2r2r1k/p5pp/3p1q2/3Q4/4R3/2N3Pb/PP3P1P/R5K1 w - - 0 1",
+            "['e4f4']",
+            True,
+            True,
+        ),
+        # Definitely not a skewer, queen gives checkmate on f7 and nothing hides behind their king
+        # https://lichess.org/analysis/r2q1rk1/5ppp/p1p3n1/1p1n2NQ/3Pb3/1BP5/PP4PP/R3R1K1_w_-_-_0_1
+        (
+            "r2q1rk1/5ppp/p1p3n1/1p1n2NQ/3Pb3/1BP5/PP4PP/R3R1K1 w - - 0 1",
+            "['h5h7']",
+            False,
+            False,
+        ),
+        # Not a skewer, the move attacks a pawn and it's probably impossible to make a skewer attacking a pawn
+        # https://lichess.org/analysis/6k1/pp3pb1/6p1/2p5/PnP5/R2P1KP1/1P3P2/2B1r3_w_-_-_0_1
+        (
+            "6k1/pp3pb1/6p1/2p5/PnP5/R2P1KP1/1P3P2/2B1r3 w - - 0 1",
+            "['c1c3']",
+            False,
+            False,
+        ),
+        # Not a skewer, it's rather a discovered attack
+        # https://lichess.org/analysis/r2q1rk1/4p1bp/2p3p1/pp2P2n/8/2NB3Q/PPP2PP1/2KR3R_w_-_-_0_1
+        (
+            "r2q1rk1/4p1bp/2p3p1/pp2P2n/8/2NB3Q/PPP2PP1/2KR3R w - - 0 1",
+            "['d3g6']",
+            False,
+            False,
+        ),
+        # Not a skewer, the rook check the king and when the king cannot move to defend the rook hidden behind it, but
+        # that rook is already defended by a bishop
+        # https://lichess.org/analysis/4kr2/pp6/3b2bp/3Bn1p1/8/1P3NPP/PP5K/2R2R2_w_-_-_0_1
+        (
+            "4kr2/pp6/3b2bp/3Bn1p1/8/1P3NPP/PP5K/2R2R2 w - - 0 1",
+            "['c1c8']",
+            False,
+            False,
+        ),
     ],
 )
 def test_skewer(fen, pv, expected_contains_skewer, expected_is_first_move_skewer):
