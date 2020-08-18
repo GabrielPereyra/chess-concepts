@@ -145,14 +145,18 @@ def is_skewer(fen: str, move: chess.Move) -> bool:
     """
     Can be only performed by a queen, rook or bishop.
 
-    Their piece is attacked by our piece of a lower value that is either defended or not attacked.
+    Performing the move moves our piece A of value X so that it attacks their piece B of value Y such that:
+    - Y > X and if A is attacked then A is defended
+    - B is on a ray between A and their other piece C of value Z
+    - Z <= Y
+    - if B is removed from the board, then A attacks C and if C is defended then Z > X
 
-    When their attacked piece is removed from the board, our attacking piece attack their another,
-    previously not attacked, piece of at least the same value.
-
-    NOTE: it will classify some of the examples as skewers that probably shouldn't be called skewers.
+    NOTE 1: it will classify some of the examples as skewers that probably shouldn't be called skewers.
     Example is a position where we attack their queen with our rook. If the queen moves, then it discovers our attack
-    on their rook, but actually the queen can move in such a way that it will defend their rook.
+    on their rook, but actually the queen can move in such a way that it will defend their rook. There is a test for this
+    in the test suite but it is commented out for now.
+
+    NOTE 2: sometimes a skewer-like attack can be blocked, it's up for discussion how do we classify these.
     """
 
     board = chess.Board(fen)
@@ -166,6 +170,7 @@ def is_skewer(fen: str, move: chess.Move) -> bool:
 
     our_color = board.turn
     their_color = not board.turn
+
     attackers_before_move = get_attacking(
         board, our_color, piece_type_filter=is_lower_value
     )
@@ -176,16 +181,31 @@ def is_skewer(fen: str, move: chess.Move) -> bool:
     )
 
     for attacker, attacked in attackers_after_move - attackers_before_move:
-        attacker_is_attacked = bool(board.attackers(their_color, attacker))
-        attacker_is_defended = bool(board.attackers(our_color, attacker))
-        if not attacker_is_attacked or attacker_is_defended:
-            board_without_attacked = board.copy()
-            board_without_attacked.remove_piece_at(attacked)
-            new_attackers = get_attacking(
-                board_without_attacked, our_color, is_lower_equal_value
+        attacker_attacked = bool(board.attackers(their_color, attacker))
+        attacker_defended = bool(board.attackers(our_color, attacker))
+        if attacker_attacked and not attacker_defended:
+            continue
+        attacker_piece_type = board.piece_type_at(attacker)
+        board_without_attacked = board.copy()
+        board_without_attacked.remove_piece_at(attacked)
+
+        for some_attacker, new_attacked in get_attacking(
+            board_without_attacked, our_color
+        ):
+            if some_attacker != attacker:
+                continue
+            new_attacked_defended = bool(
+                board_without_attacked.attackers(their_color, new_attacked)
             )
-            if new_attackers - attackers_after_move:
+            new_attacked_piece_type = board_without_attacked.piece_type_at(new_attacked)
+            if new_attacked_defended and is_lower_equal_value(
+                new_attacked_piece_type, attacker_piece_type
+            ):
+                continue
+
+            if attacked in chess.SquareSet.ray(attacker, new_attacked):
                 return True
+
     return False
 
 
