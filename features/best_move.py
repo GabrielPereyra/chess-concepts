@@ -1,9 +1,22 @@
+from enum import Enum
 from functools import cached_property
 
 import chess
 
 from features.abstract import Features
+from features.motives import is_discovered_attack, is_skewer, is_sacrifice, is_pin
 from features.helpers import is_greater_value
+
+
+# TODO: consider refactoring to enum.IntFlag if we want them to behave like bit flags
+# https://docs.python.org/3/library/enum.html#intflag
+class Tactic(Enum):
+    NONE = 0
+    FORK = 1
+    DISCOVERED_ATTACK = 2
+    PIN = 3
+    SKEWER = 4
+    SACRIFICE = 5
 
 
 class BestMove(Features):
@@ -37,7 +50,7 @@ class BestMove(Features):
 
     @cached_property
     def best_move_gives_check(self):
-        self.board.gives_check(self.move)
+        return self.board.gives_check(self.move)
 
     @cached_property
     def best_move_is_attacked(self):
@@ -122,3 +135,19 @@ class BestMove(Features):
                 for pt in self._best_move_pieces_attacked
             ]
         )
+
+    @cached_property
+    def best_move_tactic(self):
+        fen = self.board.fen()
+        if is_sacrifice(fen, self.move):
+            return Tactic.SACRIFICE
+        if is_discovered_attack(fen, self.move):
+            return Tactic.DISCOVERED_ATTACK
+        if is_pin(fen, self.move):
+            return Tactic.PIN
+        if is_skewer(fen, self.move):
+            return Tactic.SKEWER
+        # TODO: uncomment lines below when is_fork(fen, move) is implemented
+        # if is_fork(fen, self.move):
+        #     return Tactic.FORK
+        return Tactic.NONE

@@ -4,8 +4,9 @@ import chess.engine
 import features
 import pandas as pd
 from features.stockfish import STOCKFISH_PATH
+from features.best_move import Tactic
 from features.helpers import square_from_name
-from features.helpers import PositionOpenness
+from features.board import GamePhase, PositionOpenness
 import subprocess
 
 
@@ -45,9 +46,18 @@ def test_board_features():
         "their_piece_count": 16,
         "their_queens": 1,
         "their_rooks": 2,
-        "is_opening": True,
-        "is_endgame": False,
-        "is_midgame": False,
+        "endgame_type": None,
+        "material_count": 98,
+        "our_majors": 3,
+        "our_material_count": 49,
+        "our_minors": 4,
+        "our_non_pawn_pieces": 8,
+        "their_majors": 3,
+        "their_material_count": 49,
+        "their_minors": 4,
+        "their_non_pawn_pieces": 8,
+        "phase": GamePhase.OPENING,
+        "position_openness": PositionOpenness.CLOSED,
     }
 
 
@@ -57,8 +67,8 @@ def test_best_move_features():
     assert f.features() == {
         "best_move_is_attacked": False,
         "best_move_is_capture": False,
-        "best_move_is_check": False,
-        "best_move_is_defended": False,
+        "best_move_gives_check": False,
+        "best_move_was_defended": True,
         "best_move_is_en_passant": False,
         "best_move_is_promotion": False,
         "best_move_piece_type": 1,
@@ -67,6 +77,13 @@ def test_best_move_features():
         "best_move_is_horizontal": False,
         "best_move_from_square": chess.Move.from_uci(move_uci).from_square,
         "best_move_to_square": chess.Move.from_uci(move_uci).to_square,
+        "best_move_captures_hanging_piece": False,
+        "best_move_captures_piece_type": 0,
+        "best_move_number_of_higher_value_pieces_attacked": 0,
+        "best_move_number_of_pieces_attacked": 0,
+        "best_move_was_attacked": False,
+        "best_move_was_hanging": False,
+        "best_move_tactic": Tactic.NONE,
     }
 
 
@@ -412,9 +429,9 @@ def test_discovered_attack(
         # It's almost a skewer but the attacked piece has lower value
         # https://lichess.org/analysis/5rk1/2r2pp1/7p/8/2b5/7P/5PP1/5RK1_w_-_-_0_1
         ("5rk1/2r2pp1/7p/8/2b5/7P/5PP1/5RK1 w - - 0 1", "['f1c1']", False, False,),
-        # It's almost a skewer but the piece hidden behind the attacked piece can be defended by the attacked piece
+        # It is a skewer, however, the piece hidden behind the attacked piece can be defended by the attacked piece,
         # https://lichess.org/analysis/5rk1/2b2pp1/7p/8/8/2q1B2P/5PP1/5RK1_w_-_-_0_1
-        ("5rk1/2b2pp1/7p/8/8/2q1B2P/5PP1/5RK1 w - - 0 1", "['f1c1']", False, False,),
+        ("5rk1/2b2pp1/7p/8/8/2q1B2P/5PP1/5RK1 w - - 0 1", "['f1c1']", True, True,),
         # It's almost the skewer but the attacked piece can capture the attacking piece because it is undefended
         # https://lichess.org/analysis/3b1rk1/5p1p/6pq/4Q3/8/7P/5PP1/R5K1_b_-_-_0_1
         ("3b1rk1/5p1p/6pq/4Q3/8/7P/5PP1/R5K1 b - - 0 1", "['d8f6']", False, False,),
@@ -454,13 +471,22 @@ def test_discovered_attack(
             False,
             False,
         ),
-        # It is a skewer, rook attacks a queen and when the queen moves, it uncovers attack on their rook
+        # It is a skewer, rook attacks a queen and when the queen moves, it uncovers attack on their undefended rook
+        # https://lichess.org/analysis/5r1k/p1r3pp/3p1q2/3Q4/4R3/2N3Pb/PP3P1P/R5K1_w_-_-_0_1
+        (
+            "5r1k/p1r3pp/3p1q2/3Q4/4R3/2N3Pb/PP3P1P/R5K1 w - - 0 1",
+            "['e4f4']",
+            True,
+            True,
+        ),
+        # It is almost a skewer, rook attacks a queen and when the queen moves, it uncovers attack on their rook,
+        # but that rook is defended so it would likely result in exchange of rooks
         # https://lichess.org/analysis/2r2r1k/p5pp/3p1q2/3Q4/4R3/2N3Pb/PP3P1P/R5K1_w_-_-_0_1
         (
             "2r2r1k/p5pp/3p1q2/3Q4/4R3/2N3Pb/PP3P1P/R5K1 w - - 0 1",
             "['e4f4']",
-            True,
-            True,
+            False,
+            False,
         ),
         # Definitely not a skewer, queen gives checkmate on f7 and nothing hides behind their king
         # https://lichess.org/analysis/r2q1rk1/5ppp/p1p3n1/1p1n2NQ/3Pb3/1BP5/PP4PP/R3R1K1_w_-_-_0_1
@@ -495,6 +521,9 @@ def test_discovered_attack(
             False,
             False,
         ),
+        # The move is not a skewer, but a skewer already existed on the board
+        # https://lichess.org/analysis/r4rk1/4bppp/2q5/8/8/5B2/5PPP/3RQRK1_w_-_-_0_1
+        ("r4rk1/4bppp/2q5/8/8/5B2/5PPP/3RQRK1 w - - 0 1", "['d1c1']", False, False,),
     ],
 )
 def test_skewer(fen, pv, expected_contains_skewer, expected_is_first_move_skewer):
