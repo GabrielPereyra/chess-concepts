@@ -1,15 +1,14 @@
 import subprocess
 
 import chess.engine
-from joblib import delayed
 
 from features import BestMove, BestPV, Board, Checkmate, CheckmateType, Motives
 from features.ml.features_conversion import StockfishDepthStats
-from features.stockfish import Stockfish, StockfishDepth
+from features.stockfish import Stockfish
 
 
 def extract_all_features(
-    fen, engine_path, engine_process=None, depth=None, multipv=None
+        fen, engine_path, engine_process=None, depth=None, multipv=None
 ):
     engine = chess.engine.SimpleEngine.popen_uci(engine_path)
     kill_engine = False
