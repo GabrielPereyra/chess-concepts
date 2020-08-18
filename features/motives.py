@@ -41,22 +41,19 @@ def contains_fork(fen, pv):
 
 def is_discovered_attack(fen: str, move: chess.Move) -> bool:
     """
-    Let S be the set of pairs of squares (a, b) such that our piece at square a attacks their piece at square b
-    such that their piece at square b is either undefended or has a higher values
-    Let S1 be S before our move
-    Let S2 be S after our move and excluding pieces attacked by the piece that was moved
-    We define that the move is discovered attack iff. there exists an element in S2 that is not in S1
+    A discovered attack can be only performed by a queen, rook or bishop.
+
+    We define a discovered attack as a move from square in a ray of two other squares, let's call them X and Y, such
+    that our piece A is on square X, their piece B is on square Y and:
+    - A attacks B
+    - B has greater value than A or B is not defended
+    - None of their pieces attack A or A is defended or the moved piece checks their king
     """
 
     board = chess.Board(fen)
     our_color = board.turn
+    their_color = not our_color
 
-    attackers_before_move = get_attacking(
-        board, our_color, piece_type_filter=is_lower_value
-    )
-    attackers_before_move.update(
-        get_attacking(board, our_color, attacked_is_defended=False)
-    )
     board.push(move)
 
     attackers_after_move = get_attacking(
@@ -66,13 +63,19 @@ def is_discovered_attack(fen: str, move: chess.Move) -> bool:
         get_attacking(board, our_color, attacked_is_defended=False)
     )
 
-    attackers_after_move = {
-        (attacking, attacked)
-        for attacking, attacked in attackers_after_move
-        if attacking != move.to_square
-    }
-
-    return bool(attackers_after_move - attackers_before_move)
+    return bool(
+        [
+            (attacker, attacked)
+            for attacker, attacked in attackers_after_move
+            if attacker != move.to_square
+            and move.from_square in chess.SquareSet.ray(attacker, attacked)
+            and (
+                board.is_attacked_by(our_color, attacker)
+                or not board.is_attacked_by(their_color, attacker)
+                or move.to_square in board.checkers()
+            )
+        ]
+    )
 
 
 def is_pin(fen: str, move: chess.Move) -> bool:

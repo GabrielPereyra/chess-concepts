@@ -344,6 +344,30 @@ def test_fork(fen, pv, expected_contains_fork, expected_is_first_move_fork):
             False,
             False,
         ),
+        # Not a discovered attack because opponent can capture the uncovered attacking piece
+        # https://lichess.org/analysis/6k1/5p1p/4p1p1/1p1p2P1/6P1/8/R2K2r1/8_w_-_-_0_1
+        ("6k1/5p1p/4p1p1/1p1p2P1/6P1/8/R2K2r1/8 w - - 0 1", "['d2e3']", False, False,),
+        # Not a discovered attack because moving the king doesn't uncover any new attacker
+        # https://lichess.org/analysis/8/pp6/3kB3/5P2/7K/2P3p1/P4n2/5R2_w_-_-_0_1
+        ("8/pp6/3kB3/5P2/7K/2P3p1/P4n2/5R2 w - - 0 1", "['h4g3']", False, False,),
+        # Discovered attack - moving the pawn uncovers queen attacking opponent's king
+        # https://lichess.org/analysis/7N/6p1/8/2k2PQ1/6P1/8/6KP/8_w_-_-_0_1
+        ("7N/6p1/8/2k2PQ1/6P1/8/6KP/8 w - - 0 1", "['f5f6']", True, True,),
+        # Discovered attack - moving the bishop uncovers rook attacking opponent's king
+        # https://lichess.org/analysis/8/1kB4R/r7/8/2P5/7P/2K5/8_w_-_-_0_1
+        ("8/1kB4R/r7/8/2P5/7P/2K5/8 w - - 0 1", "['c7e5']", True, True,),
+        # Not a discovered attack because moving the rook doesn't uncover any new attacker
+        # https://lichess.org/analysis/7k/1p4p1/4K3/6b1/8/2r2P2/1r4PP/8_b_-_-_0_1
+        ("7k/1p4p1/4K3/6b1/8/2r2P2/1r4PP/8 b - - 0 1", "['b2b5']", False, False),
+        # Not a discovered attack because moving the rook doesn't uncover any new attacker
+        # https://lichess.org/analysis/7k/1p4p1/8/5Kb1/8/2r2P2/4r1PP/8_b_-_-_0_1
+        ("7k/1p4p1/8/5Kb1/8/2r2P2/4r1PP/8 b - - 0 1", "['c3c5']", False, False,),
+        # Discovered attack - moving the rook uncovers bishop attacking opponent's king
+        # https://lichess.org/analysis/7k/1pb3p1/8/4r3/2r5/5P1P/6PK/8_b_-_-_0_1
+        ("7k/1pb3p1/8/4r3/2r5/5P1P/6PK/8 b - - 0 1", "['e5e1']", True, True,),
+        # Not a discovered attack because capturing the knight with check doesn't uncover any new attacker
+        # https://lichess.org/analysis/8/8/8/6P1/p3kp2/P2R4/8/2r1N1K1_b_-_-_0_1
+        ("8/8/8/6P1/p3kp2/P2R4/8/2r1N1K1 b - - 0 1", "['c1e1']", False, False,),
     ],
 )
 def test_discovered_attack(
