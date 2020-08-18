@@ -161,6 +161,18 @@ class Board(Features):
         return len(self.board.pieces(chess.PAWN, self.board.turn))
 
     @cached_property
+    def our_non_pawn_pieces(self):
+        return self.our_piece_count - self.our_pawns
+
+    @cached_property
+    def our_majors(self):
+        return self.our_queens + self.our_rooks
+
+    @cached_property
+    def our_minors(self):
+        return self.our_bishops + self.our_knights
+
+    @cached_property
     def their_piece_count(self):
         return chess.popcount(self.board.occupied_co[not self.board.turn])
 
@@ -185,6 +197,18 @@ class Board(Features):
         return len(self.board.pieces(chess.PAWN, not self.board.turn))
 
     @cached_property
+    def their_non_pawn_pieces(self):
+        return self.their_piece_count - self.their_pawns
+
+    @cached_property
+    def their_majors(self):
+        return self.their_queens + self.their_rooks
+
+    @cached_property
+    def their_minors(self):
+        return self.their_bishops + self.their_knights
+
+    @cached_property
     def piece_count(self):
         return chess.popcount(self.board.occupied)
 
@@ -206,9 +230,46 @@ class Board(Features):
 
     @cached_property
     def phase(self):
-        if self.fullmove_number < 10:
+        if self.fullmove_number < 15:
             return 0 # opening
-        elif self.material_count < 36:
+        elif self.material_count < 39:
             return 1 # endgame
         else:
             return 2 # midgame
+
+    @cached_property
+    def endgame_type(self):
+        if (self.our_non_pawn_pieces == 0 and self.their_non_pawn_pieces == 0):
+            return 0 # pawn endgame
+        if (self.our_majors == 0 and self.their_majors == 0):
+            return 1 # minors and pawns
+        if (self.our_minors == 0 and self.their_minors == 0):
+            return 2 # majors and pawns
+        if (
+            self.our_rooks == 0 and
+            self.our_minors == 0 and
+            self.their_rooks == 0 and
+            self.their_minors == 0
+        ):
+            return 3 # queens and pawns
+        if (
+            self.our_queens == 0 and
+            self.our_minors == 0 and
+            self.their_queens == 0 and
+            self.their_minors == 0
+        ):
+            return 4 # rooks and pawns
+        if (
+            self.our_majors == 0 and
+            self.our_knights == 0 and
+            self.their_majors == 0 and
+            self.their_knights == 0
+        ):
+            return 5 # bishops and pawns
+        if (
+            self.our_majors == 0 and
+            self.our_bishops == 0 and
+            self.their_majors == 0 and
+            self.their_bishops == 0
+        ):
+            return 6 # knights and pawns

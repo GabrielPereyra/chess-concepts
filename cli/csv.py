@@ -124,6 +124,7 @@ def game_to_rows(game):
 
         row = {
             "elo": elo,
+            "elo_bin": int(int(elo) / 100) * 100,
             "username": username,
             "datetime": datetime_parsed,
             "opening": game.headers["Opening"],
