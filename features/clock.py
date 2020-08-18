@@ -46,12 +46,12 @@ class Clock(Features):
         s, i = self.time_control.split("+")
         s = int(s)
         if s < 30:
-            return 'ultra'
+            return "ultra"
         if s < 180:
-            return 'bullet'
+            return "bullet"
         if s < 480:
-            return 'blitz'
+            return "blitz"
         if s < 1200:
-            return 'rapid'
+            return "rapid"
         else:
-            return 'classical'
+            return "classical"

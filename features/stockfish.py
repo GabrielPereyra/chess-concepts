@@ -152,15 +152,13 @@ class StockfishEval(Features):
 
             print(line)
 
-            if 'Total evaluation: none (in check)' in line:
+            if "Total evaluation: none (in check)" in line:
                 # p.stdout.readline()
                 break
 
-
-            if 'Total evaluation' in line:
+            if "Total evaluation" in line:
                 p.stdout.readline()
                 break
-
 
             if i >= 3 and i <= 15:
                 term, white, black, total = line.split("|")
@@ -192,7 +190,6 @@ class StockfishEval(Features):
                     setattr(self, "total_{}_mg".format(term), -total_mg)
                     setattr(self, "total_{}_eg".format(term), -total_eg)
 
-
     # TODO: create stockfish pipe class so we can share this with StockfishDepth
     @classmethod
     def from_row(cls, row, p):
@@ -221,6 +218,7 @@ class StockfishEval(Features):
 
 
 import types
+
 # TODO: disgusting hack because feature class expects dir(cls) to expose all features which only works if they are defined as methods but for StockfishEval, we set them all as attributes in __init__. Need to think about how to refactor this.
 for feature in [
     "our_bishops_eg",

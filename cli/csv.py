@@ -83,13 +83,13 @@ def winning_chances(score, prev_score, turn):
     winning_chances_loss = -(winning_chances - prev_winning_chances) / 2
 
     if winning_chances_loss < 0.025:
-        move_evaluation_type = 0 # correct
+        move_evaluation_type = 0  # correct
     elif winning_chances_loss < 0.06:
-        move_evaluation_type = 1 # inaccurate
+        move_evaluation_type = 1  # inaccurate
     elif winning_chances_loss < 0.14:
-        move_evaluation_type = 2 # mistake
+        move_evaluation_type = 2  # mistake
     else:
-        move_evaluation_type = 3 # blunder
+        move_evaluation_type = 3  # blunder
 
     return {
         "winning_chances": winning_chances,

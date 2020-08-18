@@ -85,7 +85,8 @@ class BestMove(Features):
 
     @cached_property
     def best_move_captures_piece_type(self):
-        if self.best_move_is_en_passant: return 1
+        if self.best_move_is_en_passant:
+            return 1
         captures_piece_type = self.board.piece_type_at(self.move.to_square)
         return captures_piece_type if captures_piece_type else 0
 
@@ -105,7 +106,9 @@ class BestMove(Features):
         board.push(self.move)
         pieces_attacked_mask = board.attacks_mask(self.move.to_square)
         pieces_attacked_mask &= board.occupied_co[board.turn]
-        return [board.piece_type_at(s) for s in chess.scan_reversed(pieces_attacked_mask)]
+        return [
+            board.piece_type_at(s) for s in chess.scan_reversed(pieces_attacked_mask)
+        ]
 
     @cached_property
     def best_move_number_of_pieces_attacked(self):
@@ -113,4 +116,9 @@ class BestMove(Features):
 
     @cached_property
     def best_move_number_of_higher_value_pieces_attacked(self):
-        return sum([is_greater_value(pt, self.best_move_piece_type) for pt in self._best_move_pieces_attacked])
+        return sum(
+            [
+                is_greater_value(pt, self.best_move_piece_type)
+                for pt in self._best_move_pieces_attacked
+            ]
+        )
