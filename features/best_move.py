@@ -50,7 +50,7 @@ class BestMove(Features):
 
     @cached_property
     def best_move_gives_check(self):
-        self.board.gives_check(self.move)
+        return self.board.gives_check(self.move)
 
     @cached_property
     def best_move_is_attacked(self):

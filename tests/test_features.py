@@ -4,6 +4,7 @@ import chess.engine
 import features
 import pandas as pd
 from features.stockfish import STOCKFISH_PATH
+from features.best_move import Tactic
 from features.helpers import square_from_name
 from features.helpers import PositionOpenness
 import subprocess
@@ -57,8 +58,8 @@ def test_best_move_features():
     assert f.features() == {
         "best_move_is_attacked": False,
         "best_move_is_capture": False,
-        "best_move_is_check": False,
-        "best_move_is_defended": False,
+        "best_move_gives_check": False,
+        "best_move_was_defended": True,
         "best_move_is_en_passant": False,
         "best_move_is_promotion": False,
         "best_move_piece_type": 1,
@@ -67,6 +68,13 @@ def test_best_move_features():
         "best_move_is_horizontal": False,
         "best_move_from_square": chess.Move.from_uci(move_uci).from_square,
         "best_move_to_square": chess.Move.from_uci(move_uci).to_square,
+        "best_move_captures_hanging_piece": False,
+        "best_move_captures_piece_type": 0,
+        "best_move_number_of_higher_value_pieces_attacked": 0,
+        "best_move_number_of_pieces_attacked": 0,
+        "best_move_was_attacked": False,
+        "best_move_was_hanging": False,
+        "best_move_tactic": Tactic.NONE,
     }
 
 
