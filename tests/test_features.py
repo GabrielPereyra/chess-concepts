@@ -4,6 +4,8 @@ import chess.engine
 import features
 import pandas as pd
 from features.stockfish import STOCKFISH_PATH
+from features.helpers import square_from_name
+from features.helpers import PositionOpenness
 import subprocess
 
 
@@ -83,6 +85,82 @@ def test_best_pv_features():
         "best_pv_our_moved_piece_types": [chess.PAWN, chess.KNIGHT, chess.BISHOP],
         "best_pv_their_moved_piece_types": [chess.PAWN, chess.KNIGHT],
     }
+
+
+@pytest.mark.parametrize(
+    "fen, expected",
+    [
+        # https://lichess.org/analysis/rnbqnrk1/pp2bppp/3p4/2pPp3/2P1P3/2NBB3/PP2QPPP/R3K1NR_w_KQ_-_0_1
+        (
+            "rnbqnrk1/pp2bppp/3p4/2pPp3/2P1P3/2NBB3/PP2QPPP/R3K1NR w KQ - 0 1",
+            set(["c4", "c5", "d5", "d6", "e4", "e5"]),
+        ),
+        # https://lichess.org/analysis/r5k1/pp2rppp/1n2bn2/2R5/3QPq2/P4PN1/1B2B1PP/5RK1_w_-_-_0_1
+        ("r5k1/pp2rppp/1n2bn2/2R5/3QPq2/P4PN1/1B2B1PP/5RK1 w - - 0 1", set(),),
+        # https://lichess.org/analysis/rn1qk2r/pb2bppp/1p1ppn2/8/2PQ4/2N2NP1/PP2PPBP/R1B2RK1_w_kq_-_0_1
+        ("rn1qk2r/pb2bppp/1p1ppn2/8/2PQ4/2N2NP1/PP2PPBP/R1B2RK1 w kq - 0 1", set(),),
+        # https://lichess.org/editor/rnbqkbnr/ppp1pppp/8/3p4/2PP4/8/PP2PPPP/RNBQKBNR_w_KQkq_-_0_1
+        ("rnbqkbnr/ppp1pppp/8/3p4/2PP4/8/PP2PPPP/RNBQKBNR w KQkq - 0 1", set(["d4"]),),
+        # https://lichess.org/editor/rnbqkbnr/pp2pppp/2p5/2Pp4/3PP3/8/PP3PPP/RNBQKBNR_w_KQkq_-_0_1
+        (
+            "rnbqkbnr/pp2pppp/2p5/2Pp4/3PP3/8/PP3PPP/RNBQKBNR w KQkq - 0 1",
+            set(["c5", "c6", "d4"]),
+        ),
+    ],
+)
+def test_locked_pawns(fen, expected):
+    locked_pawns = features.Board._locked_pawns(fen)
+    assert locked_pawns == {square_from_name(square_name) for square_name in expected}
+
+
+@pytest.mark.parametrize(
+    "fen, expected",
+    [
+        # https://lichess.org/analysis/rnbqnrk1/pp2bppp/3p4/2pPp3/2P1P3/2NBB3/PP2QPPP/R3K1NR_w_KQ_-_0_1
+        (
+            "rnbqnrk1/pp2bppp/3p4/2pPp3/2P1P3/2NBB3/PP2QPPP/R3K1NR w KQ - 0 1",
+            PositionOpenness.CLOSED,
+        ),
+        # https://lichess.org/analysis/r5k1/pp2rppp/1n2bn2/2R5/3QPq2/P4PN1/1B2B1PP/5RK1_w_-_-_0_1
+        (
+            "r5k1/pp2rppp/1n2bn2/2R5/3QPq2/P4PN1/1B2B1PP/5RK1 w - - 0 1",
+            PositionOpenness.OPEN,
+        ),
+        # https://lichess.org/analysis/rn1qk2r/pb2bppp/1p1ppn2/8/2PQ4/2N2NP1/PP2PPBP/R1B2RK1_w_kq_-_0_1
+        (
+            "rn1qk2r/pb2bppp/1p1ppn2/8/2PQ4/2N2NP1/PP2PPBP/R1B2RK1 w kq - 0 1",
+            PositionOpenness.SEMI_OPEN,
+        ),
+        # https://lichess.org/analysis/rnbqkbnr/ppp1pppp/8/3p4/2PP4/8/PP2PPPP/RNBQKBNR_w_KQkq_-_0_1
+        (
+            "rnbqkbnr/ppp1pppp/8/3p4/2PP4/8/PP2PPPP/RNBQKBNR w KQkq - 0 1",
+            PositionOpenness.CLOSED,
+        ),
+        # https://lichess.org/analysis/rnbqkbnr/pp2pppp/2p5/2Pp4/3PP3/8/PP3PPP/RNBQKBNR_w_KQkq_-_0_1
+        (
+            "rnbqkbnr/pp2pppp/2p5/2Pp4/3PP3/8/PP3PPP/RNBQKBNR w KQkq - 0 1",
+            PositionOpenness.CLOSED,
+        ),
+        # https://lichess.org/analysis/fromPosition/r1b2rk1/pp2bppp/2n1pn2/q7/2B2B2/P1N1PN2/1PQ2PPP/3RK2R_b_K_-_0_12
+        (
+            "r1b2rk1/pp2bppp/2n1pn2/q7/2B2B2/P1N1PN2/1PQ2PPP/3RK2R b K - 0 12",
+            PositionOpenness.SEMI_OPEN,
+        ),
+        # https://lichess.org/analysis/r1b2rk1/pp2bppp/2n1p3/q6n/2B2B2/P1N1PN2/1PQ2PPP/3RK2R_w_K_-_0_1
+        (
+            "r1b2rk1/pp2bppp/2n1p3/q6n/2B2B2/P1N1PN2/1PQ2PPP/3RK2R w K - 0 1",
+            PositionOpenness.SEMI_OPEN,
+        ),
+        # https://lichess.org/analysis/fromPosition/4rr1k/n4ppp/p7/q2BPQ2/1p6/P3P3/1P3P1P/2RR2K1_b_-_-_1_25
+        (
+            "4rr1k/n4ppp/p7/q2BPQ2/1p6/P3P3/1P3P1P/2RR2K1 b - - 1 25",
+            PositionOpenness.OPEN,
+        ),
+    ],
+)
+def test_position_openness(fen, expected):
+    f = features.Board(fen)
+    assert f.features()["position_openness"] == expected
 
 
 @pytest.mark.parametrize(

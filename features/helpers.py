@@ -20,6 +20,17 @@ class GamePhase(Enum):
     MIDDLEGAME = 2
 
 
+class PositionOpenness(Enum):
+    OPEN = 0
+    SEMI_OPEN = 1
+    CLOSED = 2
+
+
+def square_from_name(square_name):
+    file, rank = square_name
+    return chess.square(ord(file) - ord("a"), int(rank) - 1)
+
+
 def is_greater_value(a, b):
     return PIECE_TYPE_VALUE[a] > PIECE_TYPE_VALUE[b]
 

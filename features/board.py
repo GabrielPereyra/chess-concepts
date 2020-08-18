@@ -5,6 +5,7 @@ import chess
 from features.abstract import Features
 from features.helpers import count_material
 from features.helpers import GamePhase
+from features.helpers import PositionOpenness
 
 
 class Board(Features):
@@ -204,6 +205,68 @@ class Board(Features):
     @cached_property
     def material_advantage(self):
         return self.our_material_count - self.their_material_count
+
+    @staticmethod
+    def _locked_pawns(fen):
+        """
+        A pawn is locked iff. it cannot move forward because opponent's pawn occupy the square in front and cannot move
+        diagonally, i.e. make a capture, because no such capture is available, regardless of whose turn is it.
+        """
+
+        board = chess.Board(fen)
+        board_opposite_turn = board.copy()
+        board_opposite_turn.turn = not board.turn
+
+        locked_pawns = set()
+        for square in chess.scan_forward(board.pawns):
+            color = board.piece_at(square).color
+            square_in_front = square + 8 if color == chess.WHITE else square - 8
+            if not (0 <= square_in_front < 64):
+                continue
+            piece_in_front = board.piece_at(square_in_front)
+            from_mask = chess.BB_SQUARES[square]
+            if (
+                piece_in_front is not None
+                and piece_in_front.piece_type == chess.PAWN
+                and piece_in_front.color != color
+                and not list(board.generate_legal_captures(from_mask))
+                and not list(board_opposite_turn.generate_legal_captures(from_mask))
+            ):
+                locked_pawns.add(square)
+        return locked_pawns
+
+    @cached_property
+    def position_openness(self):
+        """
+        Open:
+        An open position is defined as a position with no locked pawns and typically 3 or more pawns have been traded.
+        source: https://www.ichess.net/blog/three-types-positions-open/
+
+        Semi-open:
+        > A semi-open position is defined as a position with very few or no locked pawns and typically 1 or 2 pawns may
+        > have been traded.
+        source: https://www.ichess.net/blog/three-types-positions-semi-open/
+
+        Closed:
+        A closed position is defined as a position with a locked pawn center and typically very few (if any) pawns have
+        been traded.
+        source: https://www.ichess.net/blog/three-types-positions-closed/
+        """
+
+        locked_pawns = self._locked_pawns(self.board.fen())
+        center_files = "cdef"
+        locked_center_pawns = {
+            square
+            for square in locked_pawns
+            if chess.FILE_NAMES[chess.square_file(square)] in center_files
+        }
+        num_locked_center_pawns = len(locked_center_pawns)
+        num_traded_pawns = 16 - (self.our_pawns + self.their_pawns)
+        if num_locked_center_pawns == 0 and num_traded_pawns >= 5:
+            return PositionOpenness.OPEN
+        if num_locked_center_pawns <= 2 and num_traded_pawns >= 2:
+            return PositionOpenness.SEMI_OPEN
+        return PositionOpenness.CLOSED
 
     @cached_property
     def phase(self):
