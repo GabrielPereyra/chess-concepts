@@ -195,6 +195,12 @@ def test_position_openness(fen, expected):
             "['d1h5', 'h8g8', 'h5h7']",
             False,
         ),
+        # https://lichess.org/analysis/r1bqkb1r/1p1nppp1/p2p1n1p/1N6/8/8/PPPPQPPP/R1B1KBNR_w_KQkq_-_0_1
+        (
+            "r1bqkb1r/1p1nppp1/p2p1n1p/1N6/8/8/PPPPQPPP/R1B1KBNR w KQkq - 0 1",
+            "['b5d6']",
+            True,
+        ),
     ],
 )
 def test_smothered_mate(fen, pv, expected):
@@ -433,6 +439,27 @@ def test_fork(fen, pv, expected_contains_fork, expected_is_first_move_fork):
             "['c4a5']",
             False,
             False,
+        ),
+        # Rather not a discovered attack, moving the knight makes the rook that was previously defending their knight to
+        # stop defending it, so their knight is not defended and our kings attacks it.
+        # https://lichess.org/analysis/2r5/pp3k1p/2p1Npp1/8/2n5/3B2P1/P2bRP1P/6K1_b_-_-_0_1
+        (
+            "2r5/pp3k1p/2p1Npp1/8/2n5/3B2P1/P2bRP1P/6K1 b - - 0 1",
+            "['c4e5']",
+            False,
+            False,
+        ),
+        # Not a discovered attack, the move discovers our queen attacking their pawn but the move is also a checkmate
+        # https://lichess.org/analysis/2kr4/ppp1R2Q/8/5p2/8/6PP/PP2nq2/7K_b_-_-_0_1
+        ("2kr4/ppp1R2Q/8/5p2/8/6PP/PP2nq2/7K b - - 0 1", "['e2g3']", False, False,),
+        # A discovered attack that is checkmate at the same time, any knight move discovers our queen checkmating their
+        # king
+        # https://lichess.org/analysis/1n1rkr2/ppbp1pbn/1q1p1p1p/1N6/3P4/4N3/1PP1QPPP/R1B1KB1R_w_KQ_-_0_1
+        (
+            "1n1rkr2/ppbp1pbn/1q1p1p1p/1N6/3P4/4N3/1PP1QPPP/R1B1KB1R w KQ - 0 1",
+            "['e3d1']",
+            True,
+            True,
         ),
     ],
 )
@@ -886,6 +913,7 @@ def test_stockfish_eval_features():
         "total_threats_mg": 0.0,
     }
 
+
 def test_features_list():
     df = pd.DataFrame(
         [
@@ -896,5 +924,7 @@ def test_features_list():
             }
         ]
     )
-    df = features.FeatureList([features.Board, features.BestMove, features.BestPV]).from_df(df)
+    df = features.FeatureList(
+        [features.Board, features.BestMove, features.BestPV]
+    ).from_df(df)
     assert len(df.columns) == 72

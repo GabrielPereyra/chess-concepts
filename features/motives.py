@@ -43,7 +43,7 @@ def is_discovered_attack(fen: str, move: chess.Move) -> bool:
     """
     A discovered attack can be only performed by a queen, rook or bishop.
 
-    We define a discovered attack as a move from square in a ray of two other squares, let's call them X and Y, such
+    We define a discovered attack as a move from square is between two other squares, let's call them X and Y, such
     that our piece A is on square X, their piece B is on square Y and:
     - A attacks B
     - B has greater value than A or B is not defended
@@ -73,9 +73,12 @@ def is_discovered_attack(fen: str, move: chess.Move) -> bool:
     for attacker, attacked in attackers_after_move - attackers_before_move:
         if attacker == move.to_square:
             continue
+        attacked_piece_type = board.piece_type_at(attacked)
+        if board.is_checkmate() and attacked_piece_type != chess.KING:
+            continue
         attacker_is_defended = bool(board.is_attacked_by(our_color, attacker))
         attacker_is_attacked = bool(board.is_attacked_by(their_color, attacker))
-        if move.from_square in chess.SquareSet.ray(attacker, attacked) and (
+        if move.from_square in chess.SquareSet.between(attacker, attacked) and (
             attacker_is_defended
             or not attacker_is_attacked
             or move.to_square in board.checkers()
@@ -153,7 +156,7 @@ def is_skewer(fen: str, move: chess.Move) -> bool:
 
     Performing the move moves our piece A of value X so that it attacks their piece B of value Y such that:
     - Y > X and if A is attacked then A is defended
-    - B is on a ray between A and their other piece C of value Z
+    - B is between A and their other piece C of value Z
     - Z <= Y
     - if B is removed from the board, then A attacks C and if C is defended then Z > X
 
@@ -209,7 +212,7 @@ def is_skewer(fen: str, move: chess.Move) -> bool:
             ):
                 continue
 
-            if attacked in chess.SquareSet.ray(attacker, new_attacked):
+            if attacked in chess.SquareSet.between(attacker, new_attacked):
                 return True
 
     return False
