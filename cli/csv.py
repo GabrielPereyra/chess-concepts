@@ -8,6 +8,7 @@ import chess.engine
 import pandas as pd
 import datetime
 import features
+from tqdm import tqdm
 
 LICHESS_PGN_PATH = "pgns/lichess_db_standard_rated_{year}-{month:0>2}.pgn"
 LICHESS_CSV_PATH = "csvs/lichess/{year}-{month:0>2}/"
@@ -239,7 +240,7 @@ def feature(year, month, feature_name, num_shards):
         feature_name=feature_name.lower(), year=year, month=month
     )
     os.makedirs(feature_dir, exist_ok=True)
-    for shard in range(num_shards):
+    for shard in tqdm(range(num_shards)):
         df = utils.get_df(feature_class.csvs, years=[year], months=[month], shard=shard)
         feature_df = feature_class.from_df(df)
         feature_df.to_csv(feature_dir + str(shard) + ".csv", index=False)
