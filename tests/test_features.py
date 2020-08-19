@@ -600,6 +600,22 @@ def test_discovered_attack(
             False,
             False,
         ),
+        # Not a skewer because it is a pin
+        # https://lichess.org/analysis/r3nrk1/7p/1pn2pp1/2pqp3/8/P1QBP3/1B3PPP/R4RK1_w_-_-_0_1
+        (
+            "r3nrk1/7p/1pn2pp1/2pqp3/8/P1QBP3/1B3PPP/R4RK1 w - - 0 1",
+            "['d3c4']",
+            False,
+            False,
+        ),
+        # Not a skewer becaues it is a pin and discovered attack at the same time
+        # https://lichess.org/analysis/rnb1k2r/ppp1qpbp/5np1/3p4/3P4/5N2/PPP1BPPP/RNBQR1K1_w_kq_-_0_1
+        (
+            "rnb1k2r/ppp1qpbp/5np1/3p4/3P4/5N2/PPP1BPPP/RNBQR1K1 w kq - 0 1",
+            "['e2b5']",
+            False,
+            False,
+        ),
     ],
 )
 def test_skewer(fen, pv, expected_contains_skewer, expected_is_first_move_skewer):

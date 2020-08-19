@@ -8,6 +8,7 @@ from features.helpers import (
     is_lower_value,
     is_lower_equal_value,
     is_greater_value,
+    is_greater_equal_value,
 )
 from features.helpers import count_material, PIECE_TYPE_VALUE
 
@@ -178,23 +179,28 @@ def is_skewer(fen: str, move: chess.Move) -> bool:
         return False
 
     our_color = board.turn
-    their_color = not board.turn
+    their_color = not our_color
 
-    attackers_before_move = get_attacking(
-        board, our_color, piece_type_filter=is_lower_value
-    )
+    attackers_before_move = get_attacking(board, our_color)
     board.push(move)
-
-    attackers_after_move = get_attacking(
-        board, our_color, piece_type_filter=is_lower_value
-    )
+    attackers_after_move = get_attacking(board, our_color)
 
     for attacker, attacked in attackers_after_move - attackers_before_move:
         attacker_attacked = bool(board.attackers(their_color, attacker))
         attacker_defended = bool(board.attackers(our_color, attacker))
+
         if attacker_attacked and not attacker_defended:
             continue
+
+        attacked_defended = bool(board.attackers(their_color, attacked))
         attacker_piece_type = board.piece_type_at(attacker)
+        attacked_piece_type = board.piece_type_at(attacked)
+
+        if attacked_defended and is_greater_equal_value(
+            attacker_piece_type, attacked_piece_type
+        ):
+            continue
+
         board_without_attacked = board.copy()
         board_without_attacked.remove_piece_at(attacked)
 
@@ -203,10 +209,14 @@ def is_skewer(fen: str, move: chess.Move) -> bool:
         ):
             if some_attacker != attacker:
                 continue
+
+            new_attacked_piece_type = board_without_attacked.piece_type_at(new_attacked)
+            if is_greater_equal_value(new_attacked_piece_type, attacked_piece_type):
+                continue
+
             new_attacked_defended = bool(
                 board_without_attacked.attackers(their_color, new_attacked)
             )
-            new_attacked_piece_type = board_without_attacked.piece_type_at(new_attacked)
             if new_attacked_defended and is_lower_equal_value(
                 new_attacked_piece_type, attacker_piece_type
             ):
