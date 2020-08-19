@@ -54,6 +54,13 @@ def is_discovered_attack(fen: str, move: chess.Move) -> bool:
     our_color = board.turn
     their_color = not our_color
 
+    attackers_before_move = get_attacking(
+        board, our_color, piece_type_filter=is_lower_value
+    )
+    attackers_before_move.update(
+        get_attacking(board, our_color, attacked_is_defended=False)
+    )
+
     board.push(move)
 
     attackers_after_move = get_attacking(
@@ -63,19 +70,18 @@ def is_discovered_attack(fen: str, move: chess.Move) -> bool:
         get_attacking(board, our_color, attacked_is_defended=False)
     )
 
-    return bool(
-        [
-            (attacker, attacked)
-            for attacker, attacked in attackers_after_move
-            if attacker != move.to_square
-            and move.from_square in chess.SquareSet.ray(attacker, attacked)
-            and (
-                board.is_attacked_by(our_color, attacker)
-                or not board.is_attacked_by(their_color, attacker)
-                or move.to_square in board.checkers()
-            )
-        ]
-    )
+    for attacker, attacked in attackers_after_move - attackers_before_move:
+        if attacker == move.to_square:
+            continue
+        attacker_is_defended = bool(board.is_attacked_by(our_color, attacker))
+        attacker_is_attacked = bool(board.is_attacked_by(their_color, attacker))
+        if move.from_square in chess.SquareSet.ray(attacker, attacked) and (
+            attacker_is_defended
+            or not attacker_is_attacked
+            or move.to_square in board.checkers()
+        ):
+            return True
+    return False
 
 
 def is_pin(fen: str, move: chess.Move) -> bool:
@@ -250,7 +256,7 @@ def is_sacrifice(fen: str, move: chess.Move) -> bool:
 
 class Motives(Features):
 
-    csvs = ['lichess', 'stockfish10']
+    csvs = ["lichess", "stockfish10"]
 
     def __init__(self, fen, pv):
         self.board = chess.Board(fen)
