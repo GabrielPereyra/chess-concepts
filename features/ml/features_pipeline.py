@@ -3,6 +3,7 @@ import subprocess
 import chess.engine
 
 from features import BestMove, BestPV, Board, Checkmate, CheckmateType, Motives
+from features.ml.bitboards import BitBoards
 from features.ml.features_conversion import StockfishDepthStats
 from features.stockfish import Stockfish
 
@@ -76,6 +77,7 @@ def extract_all_features_precalc(
         Checkmate(fen, best_pv),
         CheckmateType(fen, best_pv),
         Motives(fen, best_pv),
+        BitBoards(fen)
         # StockfishDepthStats(fen, engine_process, best_move),
     ]
 
@@ -86,6 +88,8 @@ def extract_all_features_precalc(
             # convert enums
             if hasattr(v, "name"):
                 v = v.name
+            if k.endswith("_piece_type") and v in range(1,7):
+                v = chess.piece_name(v)
             # explode list - encode the elements as binary values
             if isinstance(v, list):
                 for el in v:
