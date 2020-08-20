@@ -8,6 +8,7 @@ from features.helpers import (
     is_lower_value,
     is_lower_equal_value,
     is_greater_value,
+    is_greater_equal_value,
 )
 from features.helpers import count_material, PIECE_TYPE_VALUE
 
@@ -43,7 +44,7 @@ def is_discovered_attack(fen: str, move: chess.Move) -> bool:
     """
     A discovered attack can be only performed by a queen, rook or bishop.
 
-    We define a discovered attack as a move from square in a ray of two other squares, let's call them X and Y, such
+    We define a discovered attack as a move from square is between two other squares, let's call them X and Y, such
     that our piece A is on square X, their piece B is on square Y and:
     - A attacks B
     - B has greater value than A or B is not defended
@@ -54,6 +55,13 @@ def is_discovered_attack(fen: str, move: chess.Move) -> bool:
     our_color = board.turn
     their_color = not our_color
 
+    attackers_before_move = get_attacking(
+        board, our_color, piece_type_filter=is_lower_value
+    )
+    attackers_before_move.update(
+        get_attacking(board, our_color, attacked_is_defended=False)
+    )
+
     board.push(move)
 
     attackers_after_move = get_attacking(
@@ -63,19 +71,21 @@ def is_discovered_attack(fen: str, move: chess.Move) -> bool:
         get_attacking(board, our_color, attacked_is_defended=False)
     )
 
-    return bool(
-        [
-            (attacker, attacked)
-            for attacker, attacked in attackers_after_move
-            if attacker != move.to_square
-            and move.from_square in chess.SquareSet.ray(attacker, attacked)
-            and (
-                board.is_attacked_by(our_color, attacker)
-                or not board.is_attacked_by(their_color, attacker)
-                or move.to_square in board.checkers()
-            )
-        ]
-    )
+    for attacker, attacked in attackers_after_move - attackers_before_move:
+        if attacker == move.to_square:
+            continue
+        attacked_piece_type = board.piece_type_at(attacked)
+        if board.is_checkmate() and attacked_piece_type != chess.KING:
+            continue
+        attacker_is_defended = bool(board.is_attacked_by(our_color, attacker))
+        attacker_is_attacked = bool(board.is_attacked_by(their_color, attacker))
+        if move.from_square in chess.SquareSet.between(attacker, attacked) and (
+            attacker_is_defended
+            or not attacker_is_attacked
+            or move.to_square in board.checkers()
+        ):
+            return True
+    return False
 
 
 def is_pin(fen: str, move: chess.Move) -> bool:
@@ -147,7 +157,7 @@ def is_skewer(fen: str, move: chess.Move) -> bool:
 
     Performing the move moves our piece A of value X so that it attacks their piece B of value Y such that:
     - Y > X and if A is attacked then A is defended
-    - B is on a ray between A and their other piece C of value Z
+    - B is between A and their other piece C of value Z
     - Z <= Y
     - if B is removed from the board, then A attacks C and if C is defended then Z > X
 
@@ -169,23 +179,28 @@ def is_skewer(fen: str, move: chess.Move) -> bool:
         return False
 
     our_color = board.turn
-    their_color = not board.turn
+    their_color = not our_color
 
-    attackers_before_move = get_attacking(
-        board, our_color, piece_type_filter=is_lower_value
-    )
+    attackers_before_move = get_attacking(board, our_color)
     board.push(move)
-
-    attackers_after_move = get_attacking(
-        board, our_color, piece_type_filter=is_lower_value
-    )
+    attackers_after_move = get_attacking(board, our_color)
 
     for attacker, attacked in attackers_after_move - attackers_before_move:
         attacker_attacked = bool(board.attackers(their_color, attacker))
         attacker_defended = bool(board.attackers(our_color, attacker))
+
         if attacker_attacked and not attacker_defended:
             continue
+
+        attacked_defended = bool(board.attackers(their_color, attacked))
         attacker_piece_type = board.piece_type_at(attacker)
+        attacked_piece_type = board.piece_type_at(attacked)
+
+        if attacked_defended and is_greater_equal_value(
+            attacker_piece_type, attacked_piece_type
+        ):
+            continue
+
         board_without_attacked = board.copy()
         board_without_attacked.remove_piece_at(attacked)
 
@@ -194,16 +209,20 @@ def is_skewer(fen: str, move: chess.Move) -> bool:
         ):
             if some_attacker != attacker:
                 continue
+
+            new_attacked_piece_type = board_without_attacked.piece_type_at(new_attacked)
+            if is_greater_equal_value(new_attacked_piece_type, attacked_piece_type):
+                continue
+
             new_attacked_defended = bool(
                 board_without_attacked.attackers(their_color, new_attacked)
             )
-            new_attacked_piece_type = board_without_attacked.piece_type_at(new_attacked)
             if new_attacked_defended and is_lower_equal_value(
                 new_attacked_piece_type, attacker_piece_type
             ):
                 continue
 
-            if attacked in chess.SquareSet.ray(attacker, new_attacked):
+            if attacked in chess.SquareSet.between(attacker, new_attacked):
                 return True
 
     return False
@@ -249,6 +268,9 @@ def is_sacrifice(fen: str, move: chess.Move) -> bool:
 
 
 class Motives(Features):
+
+    csvs = ["lichess", "stockfish10"]
+
     def __init__(self, fen, pv):
         self.board = chess.Board(fen)
         self.pv = [chess.Move.from_uci(move) for move in eval(pv)]
@@ -272,19 +294,19 @@ class Motives(Features):
                 board.push(their_move)
         return False
 
-    @cached_property
-    def contains_fork(self):
-        return contains_fork(self.board.fen(), self.pv)
+    # @cached_property
+    # def contains_fork(self):
+    #     return contains_fork(self.board.fen(), self.pv)
 
     @cached_property
     def is_first_move_fork(self):
         return contains_fork(self.board.fen(), self.pv[:3])
 
-    @cached_property
-    def contains_discovered_attack(self):
-        return self._contains_simple_motive(
-            self.board.fen(), self.pv, is_discovered_attack
-        )
+    # @cached_property
+    # def contains_discovered_attack(self):
+    #     return self._contains_simple_motive(
+    #         self.board.fen(), self.pv, is_discovered_attack
+    #     )
 
     @cached_property
     def is_first_move_discovered_attack(self):
@@ -292,25 +314,25 @@ class Motives(Features):
             self.board.fen(), self.pv[:1], is_discovered_attack
         )
 
-    @cached_property
-    def contains_skewer(self):
-        return self._contains_simple_motive(self.board.fen(), self.pv, is_skewer)
+    # @cached_property
+    # def contains_skewer(self):
+    #     return self._contains_simple_motive(self.board.fen(), self.pv, is_skewer)
 
     @cached_property
     def is_first_move_skewer(self):
         return self._contains_simple_motive(self.board.fen(), self.pv[:1], is_skewer)
 
-    @cached_property
-    def contains_pin(self):
-        return self._contains_simple_motive(self.board.fen(), self.pv, is_pin)
+    # @cached_property
+    # def contains_pin(self):
+    #     return self._contains_simple_motive(self.board.fen(), self.pv, is_pin)
 
     @cached_property
     def is_first_move_pin(self):
         return self._contains_simple_motive(self.board.fen(), self.pv[:1], is_pin)
 
-    @cached_property
-    def contains_sacrifice(self):
-        return self._contains_simple_motive(self.board.fen(), self.pv, is_sacrifice)
+    # @cached_property
+    # def contains_sacrifice(self):
+    #     return self._contains_simple_motive(self.board.fen(), self.pv, is_sacrifice)
 
     @cached_property
     def is_first_move_sacrifice(self):

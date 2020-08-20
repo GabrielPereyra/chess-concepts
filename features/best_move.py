@@ -1,4 +1,4 @@
-from enum import Enum
+from enum import IntEnum
 from functools import cached_property
 
 import chess
@@ -10,7 +10,7 @@ from features.helpers import is_greater_value
 
 # TODO: consider refactoring to enum.IntFlag if we want them to behave like bit flags
 # https://docs.python.org/3/library/enum.html#intflag
-class Tactic(Enum):
+class Tactic(IntEnum):
     NONE = 0
     FORK = 1
     DISCOVERED_ATTACK = 2
@@ -49,12 +49,12 @@ class BestMove(Features):
         return self.board.is_capture(self.move)
 
     @cached_property
-    def best_move_gives_check(self):
-        return self.board.gives_check(self.move)
+    def best_move_is_capture_higher_value(self):
+        return is_greater_value(self.best_move_captures_piece_type, self.best_move_piece_type)
 
     @cached_property
-    def best_move_is_attacked(self):
-        return self.board.is_attacked_by(not self.board.turn, self.move.to_square)
+    def best_move_gives_check(self):
+        return self.board.gives_check(self.move)
 
     @cached_property
     def best_move_is_horizontal(self):
@@ -105,6 +105,12 @@ class BestMove(Features):
 
     @cached_property
     def best_move_is_attacked(self):
+        board = self.board.copy()
+        board.push(self.move)
+        return board.is_attacked_by(board.turn, self.move.to_square)
+
+    @cached_property
+    def best_move_is_defended(self):
         board = self.board.copy()
         board.push(self.move)
         return board.is_attacked_by(not board.turn, self.move.to_square)

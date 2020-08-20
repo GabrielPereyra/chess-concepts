@@ -8,3 +8,4 @@ requests
 pytest
 coverage
 black
+tqdm==4.48.2

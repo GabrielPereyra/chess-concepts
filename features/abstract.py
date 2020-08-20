@@ -39,3 +39,15 @@ class Features:
                 feature_instance = cls.from_row(row)
                 feature_rows.append(feature_instance.features())
         return pd.DataFrame(feature_rows)
+
+
+class FeatureList():
+
+    def __init__(self, features):
+        self.features = features
+
+    def from_df(self, df):
+        dfs = []
+        for feature in self.features:
+            dfs.append(feature.from_df(df))
+        return pd.concat(dfs, axis=1)
