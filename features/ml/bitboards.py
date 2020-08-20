@@ -12,10 +12,11 @@ class BitBoards(Features):
 
     def features(self):
         sparse_board = {}
-        for rank in range(8):
-            for file in range(8):
-                piece = str(self.board.piece_at(rank * 8 + file))
-                if piece in self.pieces_list:
-                    piece_ind = self.pieces_list.index(piece)
-                    sparse_board[f"{rank}_{file}_{piece}"] = 1
+        for square, piece in self.board.piece_map().items():
+            sparse_board[f"{chess.SQUARE_NAMES[square]}_{piece.symbol()}"] = 1
         return sparse_board
+
+
+if __name__ == '__main__':
+    board = chess.Board()
+    print(BitBoards(board.fen()).features())
