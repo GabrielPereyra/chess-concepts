@@ -19,8 +19,8 @@ class Checkmate(Features):
             self.board.push(move)
 
         # TODO: need to figure out why this happens.
-        if not self.board.is_checkmate():
-            print("wtf")
+        # if not self.board.is_checkmate():
+        #     print("wtf")
 
     @classmethod
     def from_row(cls, row):

@@ -18,8 +18,8 @@ class CheckmateType(Features):
         for move in self.pv:
             self.final_board.push(move)
 
-        if not self.final_board.is_checkmate():
-            print("wtf")
+        # if not self.final_board.is_checkmate():
+        #     print("wtf")
 
     @classmethod
     def from_row(cls, row):
