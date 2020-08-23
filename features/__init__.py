@@ -8,4 +8,3 @@ from features.clock import Clock
 from features.motives import Motives
 from features.opening import Opening
 from features.abstract import FeatureList
-from features.threats import Threats, ThreatsAfterBestMove

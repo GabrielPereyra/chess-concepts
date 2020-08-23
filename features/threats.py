@@ -1,160 +1,121 @@
-from functools import cached_property
-
 import chess
-from chess import PAWN, KNIGHT, BISHOP, ROOK, QUEEN
-from features.abstract import Features
-from features.helpers import is_greater_value
-
-
+import itertools
 import pandas as pd
+pd.set_option('display.max_rows', 1000)
 
 
-OURS, THEIRS = True, False
+PIECE_TYPE_VALUE = {
+    None: 0,
+    1: 1,
+    2: 3,
+    3: 3,
+    4: 5,
+    5: 9,
+    6: 10,
+}
 
 
-def squares_to_piece_types(board, squares):
-    return [board.piece_type_at(square) for square in squares]
+class Square():
+
+    def __init__(self, board, square):
+        self.square = square
+        self.rank = chess.square_rank(square)
+        self.file = chess.square_file(square)
+        self.is_light = bool(square % 2)
 
 
 class Piece():
 
+    # TODO: is_minor / major / slider?
+
     def __init__(self, board, square):
         self.square = square
-        piece = board.piece_at(square)
-        self.piece_type = piece.piece_type
-        self.color = piece.color
-
-        # self.is_attacked = board.is_attacked_by(not self.color, square)
-        # self.is_defended = board.is_attacked_by(self.color, square)
-        # self.is_hanging = self.is_attacked and not self.is_defended
+        self.piece_type = board.piece_type_at(square)
+        self.color = board.color_at(square)
+        self.value = PIECE_TYPE_VALUE[self.piece_type]
         # self.is_pinned = board.is_pinned(self.color, square)
 
-        attackers = board.attackers(not self.color, square)
-        # defenders = board.attackers(self.color, square)
-        self.piece_types_attacking = squares_to_piece_types(board, attackers)
-        # self.piece_types_defending = squares_to_piece_types(board, defenders)
-
-        # attacks = board.attacks(square)
-        # self.piece_types_attacked = squares_to_piece_types(board, attacks)
-
-        self.is_attacked_by_lower_value = any([is_greater_value(self.piece_type, pt) for pt in self.piece_types_attacking])
-
-    def as_row(self):
-        # TODO: get this from __dict___
-        return {
-            'piece_type': self.piece_type,
-            'color': self.color,
-
-            # 'is_attacked': self.is_attacked,
-            # 'is_defended': self.is_defended,
-            # 'is_hanging': self.is_hanging,
-            # 'is_pinned': self.is_pinned,
-            #
-            # 'piece_types_attacking': self.piece_types_attacking,
-            # 'piece_types_defending': self.piece_types_defending,
-            # 'piece_types_attacked': self.piece_types_attacked,
-
-            'is_attacked_by_lower_value': self.is_attacked_by_lower_value
-        }
+    @classmethod
+    def df(cls, board):
+        pieces = chess.scan_reversed(board.occupied)
+        df = pd.DataFrame([cls(board, p).__dict__ for p in pieces])
+        return df.set_index('square')
 
 
-class Threats(Features):
+class Move():
+
+    def __init__(self, board, move):
+        self.from_square = move.from_square
+        self.to_square = move.to_square
+        self.piece_type = board.piece_type_at(self.from_square)
+        self.gives_check = board.gives_check(move)
+        self.is_capture = board.is_capture(move)
+        # self.is_en_passant = board.is_en_passant(move)
+        # self.is_castling = board.is_castling(move)
+
+    @classmethod
+    def df(cls, board):
+        return pd.DataFrame([cls(board, m).__dict__ for m in board.legal_moves])
+
+
+class Moves():
+
+    def __init__(self, fen):
+        df = Move.df(chess.Board(fen))
+        self.num_moves = len(df)
+        self.reachable_squares = len(df['to_square'].unique())
+        self.num_checks = df['gives_check'].sum()
+        self.num_captures = df['is_capture'].sum()
+
+
+class Pieces():
+
+    def __init__(self, fen):
+        df = Piece.df(chess.Board(fen))
+
+        piece_counts = df.groupby(['color', 'piece_type']).size()
+        for (color, piece_type), count in piece_counts.iteritems():
+            piece_name = chess.PIECE_NAMES[piece_type]
+            whose = 'our' if color == board.turn else 'their'
+            setattr(self, '{}_{}_count'.format(whose, piece_name), count)
+
+
+class Attack():
+
+    def __init__(self, attacking, attacked):
+        self.attacking = attacking
+        self.attacked = attacked
+
+    @classmethod
+    def df(cls, board):
+        attacks = []
+        for attacking in chess.scan_reversed(board.occupied):
+            for attacked in board.attacks(attacking):
+                attacks.append(Attack(attacking, attacked).__dict__)
+        return pd.DataFrame(attacks)
+
+
+# our attacked / their attacked
+class AttackedPieces():
 
     def __init__(self, fen):
         board = chess.Board(fen)
-        pieces = [Piece(board, s) for s in chess.scan_reversed(board.occupied)]
-        rows = [p.as_row() for p in pieces]
-        self.df = pd.DataFrame(rows)
-        self.turn = board.turn
+        piece_df = Piece.df(board)
+        attack_df = Attack.df(board)
 
-    @cached_property
-    def _our_df(self):
-        return self.df[self.df['color'] == self.turn]
+        df = attack_df.merge(piece_df, left_on='attacking', right_index=True)
+        df = df.merge(piece_df, left_on='attacked', right_index=True, suffixes=('_attacking', '_attacked'))
 
-    @cached_property
-    def _their_df(self):
-        return self.df[self.df['color'] != self.turn]
-    #
-    # @cached_property
-    # def our_pinned_pieces(self):
-    #     return len(self._our_df[self._our_df['is_pinned']])
-    #
-    # @cached_property
-    # def their_pinned_pieces(self):
-    #     return len(self._their_df[self._their_df['is_pinned']])
+        df['is_attacked_by_lower_value'] = df['value_attacked'] > df['value_attacking']
 
-    @cached_property
-    def our_pieces_attacked_by_lower_value(self):
-        return len(self._our_df[self._our_df['is_attacked_by_lower_value']])
+        df.groupby(['color_attacking', 'color_attacked',  'attacked']).agg({'is_attacked_by_lower_value': any})
 
-    @cached_property
-    def their_pieces_attacked_by_lower_value(self):
-        return len(self._their_df[self._their_df['is_attacked_by_lower_value']])
+        import pdb; pdb.set_trace()
 
-    # @cached_property
-    # def our_pieces_attacked(self):
-    #     return len(self._our_df[self._our_df['is_attacked']])
-    #
-    # @cached_property
-    # def their_pieces_attacked(self):
-    #     return len(self._their_df[self._their_df['is_attacked']])
-    #
-    # @cached_property
-    # def our_pieces_defended(self):
-    #     return len(self._our_df[self._our_df['is_defended']])
-    #
-    # @cached_property
-    # def their_pieces_defended(self):
-    #     return len(self._their_df[self._their_df['is_defended']])
-    #
-    # @cached_property
-    # def our_pieces_hanging(self):
-    #     return len(self._our_df[self._our_df['is_hanging']])
-    #
-    # @cached_property
-    # def their_pieces_hanging(self):
-    #     return len(self._their_df[self._their_df['is_hanging']])
-
-
-class ThreatsAfterBestMove(Features):
-
-    csvs = ["lichess", "stockfish10"]
-
-    def __init__(self, fen, move):
-        board = chess.Board(fen)
-        self.turn = board.turn
-        board.push(chess.Move.from_uci(move))
-        pieces = [Piece(board, s) for s in chess.scan_reversed(board.occupied)]
-        rows = [p.as_row() for p in pieces]
-        self.df = pd.DataFrame(rows)
-
-    # TODO: replace this with an attribute which specifies columns
-    @classmethod
-    def from_row(cls, row):
-        return cls(row.fen, row.best_move)
-
-    @cached_property
-    def _our_df(self):
-        return self.df[self.df['color'] == self.turn]
-
-    @cached_property
-    def _their_df(self):
-        return self.df[self.df['color'] != self.turn]
-
-    @cached_property
-    def our_pieces_attacked_by_lower_value_after_best_move(self):
-        return len(self._our_df[self._our_df['is_attacked_by_lower_value']])
-
-    @cached_property
-    def their_pieces_attacked_by_lower_value_after_best_move(self):
-        return len(self._their_df[self._their_df['is_attacked_by_lower_value']])
 
 
 if __name__ == '__main__':
-    board = chess.Board(None)
-    board.set_piece_at(chess.A2, chess.Piece(PAWN, chess.WHITE))
-    board.set_piece_at(chess.B3, chess.Piece(KNIGHT, chess.BLACK))
-
-    pieces = Threats(board.fen())
-
-    import pdb; pdb.set_trace()
+    df = pd.read_csv('csvs/lichess/0-00/0.csv')
+    fen = df['fen'][38]
+    print(chess.Board(fen))
+    AttackedPieces(fen)
