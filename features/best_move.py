@@ -4,7 +4,13 @@ from functools import cached_property
 import chess
 
 from features.abstract import Features
-from features.motives import is_discovered_attack, is_skewer, is_sacrifice, is_pin
+from features.motives import (
+    is_discovered_attack,
+    is_skewer,
+    is_pin,
+    is_sacrifice,
+    is_fork,
+)
 from features.helpers import is_greater_value
 
 
@@ -50,7 +56,9 @@ class BestMove(Features):
 
     @cached_property
     def best_move_is_capture_higher_value(self):
-        return is_greater_value(self.best_move_captures_piece_type, self.best_move_piece_type)
+        return is_greater_value(
+            self.best_move_captures_piece_type, self.best_move_piece_type
+        )
 
     @cached_property
     def best_move_gives_check(self):
@@ -153,7 +161,6 @@ class BestMove(Features):
             return Tactic.PIN
         if is_skewer(fen, self.move):
             return Tactic.SKEWER
-        # TODO: uncomment lines below when is_fork(fen, move) is implemented
-        # if is_fork(fen, self.move):
-        #     return Tactic.FORK
+        if is_fork(fen, self.move):
+            return Tactic.FORK
         return Tactic.NONE

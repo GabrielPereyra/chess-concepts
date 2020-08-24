@@ -1,3 +1,5 @@
+import subprocess
+
 import pytest
 import chess
 import chess.engine
@@ -7,7 +9,6 @@ from features.stockfish import STOCKFISH_PATH
 from features.best_move import Tactic
 from features.helpers import square_from_name
 from features.board import GamePhase, PositionOpenness
-import subprocess
 
 
 def test_board_features():
@@ -110,18 +111,18 @@ def test_best_pv_features():
         # https://lichess.org/analysis/rnbqnrk1/pp2bppp/3p4/2pPp3/2P1P3/2NBB3/PP2QPPP/R3K1NR_w_KQ_-_0_1
         (
             "rnbqnrk1/pp2bppp/3p4/2pPp3/2P1P3/2NBB3/PP2QPPP/R3K1NR w KQ - 0 1",
-            set(["c4", "c5", "d5", "d6", "e4", "e5"]),
+            {"c4", "c5", "d5", "d6", "e4", "e5"},
         ),
         # https://lichess.org/analysis/r5k1/pp2rppp/1n2bn2/2R5/3QPq2/P4PN1/1B2B1PP/5RK1_w_-_-_0_1
         ("r5k1/pp2rppp/1n2bn2/2R5/3QPq2/P4PN1/1B2B1PP/5RK1 w - - 0 1", set(),),
         # https://lichess.org/analysis/rn1qk2r/pb2bppp/1p1ppn2/8/2PQ4/2N2NP1/PP2PPBP/R1B2RK1_w_kq_-_0_1
         ("rn1qk2r/pb2bppp/1p1ppn2/8/2PQ4/2N2NP1/PP2PPBP/R1B2RK1 w kq - 0 1", set(),),
         # https://lichess.org/editor/rnbqkbnr/ppp1pppp/8/3p4/2PP4/8/PP2PPPP/RNBQKBNR_w_KQkq_-_0_1
-        ("rnbqkbnr/ppp1pppp/8/3p4/2PP4/8/PP2PPPP/RNBQKBNR w KQkq - 0 1", set(["d4"]),),
+        ("rnbqkbnr/ppp1pppp/8/3p4/2PP4/8/PP2PPPP/RNBQKBNR w KQkq - 0 1", {"d4"},),
         # https://lichess.org/editor/rnbqkbnr/pp2pppp/2p5/2Pp4/3PP3/8/PP3PPP/RNBQKBNR_w_KQkq_-_0_1
         (
             "rnbqkbnr/pp2pppp/2p5/2Pp4/3PP3/8/PP3PPP/RNBQKBNR w KQkq - 0 1",
-            set(["c5", "c6", "d4"]),
+            {"c5", "c6", "d4"},
         ),
     ],
 )
@@ -219,6 +220,8 @@ def test_smothered_mate(fen, pv, expected):
         ("3r2k1/5ppp/8/8/8/8/5PPP/6K1 b - - 0 1", "['d8d1']", True,),
         # https://lichess.org/analysis/8/1P2q3/8/8/K1k5/8/8/8_b_-_-_0_1
         ("8/1P2q3/8/8/K1k5/8/8/8 b - - 0 1", "['e7b4']", False,),
+        # https://lichess.org/analysis/6k1/3P1ppp/8/8/8/8/5PPP/6K1_w_-_-_0_1
+        ("6k1/3P1ppp/8/8/8/8/5PPP/6K1 w - - 0 1", "['d7d8q']", True),
     ],
 )
 def test_back_rank_mate(fen, pv, expected):
@@ -497,23 +500,22 @@ def test_discovered_attack(
         # It's almost a skewer but the attacked piece has lower value
         # https://lichess.org/analysis/5rk1/2r2pp1/7p/8/2b5/7P/5PP1/5RK1_w_-_-_0_1
         ("5rk1/2r2pp1/7p/8/2b5/7P/5PP1/5RK1 w - - 0 1", "['f1c1']", False, False,),
-        # It is a skewer, however, the piece hidden behind the attacked piece can be defended by the attacked piece,
+        # Not a skewer because the piece hidden behind the attacked piece can be defended by the attacked piece
         # https://lichess.org/analysis/5rk1/2b2pp1/7p/8/8/2q1B2P/5PP1/5RK1_w_-_-_0_1
-        ("5rk1/2b2pp1/7p/8/8/2q1B2P/5PP1/5RK1 w - - 0 1", "['f1c1']", True, True,),
+        ("5rk1/2b2pp1/7p/8/8/2q1B2P/5PP1/5RK1 w - - 0 1", "['f1c1']", False, False,),
         # It's almost the skewer but the attacked piece can capture the attacking piece because it is undefended
         # https://lichess.org/analysis/3b1rk1/5p1p/6pq/4Q3/8/7P/5PP1/R5K1_b_-_-_0_1
         ("3b1rk1/5p1p/6pq/4Q3/8/7P/5PP1/R5K1 b - - 0 1", "['d8f6']", False, False,),
         # Not a skewer, rook gives a check but doesn't skewer anything behind the king
         # https://lichess.org/analysis/6k1/4Rpbp/p5p1/8/2pr4/7P/PP3PP1/3R2K1_w_-_-_0_1
         ("6k1/4Rpbp/p5p1/8/2pr4/7P/PP3PP1/3R2K1 w - - 0 1", "['e7e8']", False, False),
-        # It is a skewer, rook attack kings and skewers the rook behind it, but the move
-        # is also a checkmate
+        # Not a skewer because the move is checkmate
         # https://lichess.org/analysis/rn3k1r/ppp3pp/3N1p2/4R3/P1B5/5b2/1P3PPP/R1B3K1_w_-_-_0_1
         (
             "rn3k1r/ppp3pp/3N1p2/4R3/P1B5/5b2/1P3PPP/R1B3K1 w - - 0 1",
             "['e5e8']",
-            True,
-            True,
+            False,
+            False,
         ),
         # Not a skewer, rook attacks the king and nothing hides behind the king
         # https://lichess.org/analysis/5r1k/1bp1n2p/p5pB/4q3/1p1PP3/P7/1P2N1PP/3R1R1K_w_-_-_0_1
@@ -539,13 +541,14 @@ def test_discovered_attack(
             False,
             False,
         ),
-        # It is a skewer, rook attacks a queen and when the queen moves, it uncovers attack on their undefended rook
+        # Not a skewer, rook attacks a queen and there is a rook hidden behind the queen but the queen has a move
+        # to defend the hidden rook.
         # https://lichess.org/analysis/5r1k/p1r3pp/3p1q2/3Q4/4R3/2N3Pb/PP3P1P/R5K1_w_-_-_0_1
         (
             "5r1k/p1r3pp/3p1q2/3Q4/4R3/2N3Pb/PP3P1P/R5K1 w - - 0 1",
             "['e4f4']",
-            True,
-            True,
+            False,
+            False,
         ),
         # It is almost a skewer, rook attacks a queen and when the queen moves, it uncovers attack on their rook,
         # but that rook is defended so it would likely result in exchange of rooks
