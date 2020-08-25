@@ -13,7 +13,7 @@ from features.abstract import Features
 class CheckmateType(Features):
     def __init__(self, fen: str, pv: Iterable[str]):
         aug = AugBoard(fen)
-        pv = [chess.Move.from_uci(move) for move in eval(pv)]
+        pv = [chess.Move.from_uci(move) for move in pv]
         for move in pv[:-1]:
             aug.push(move)
         self.fen = aug.fen()

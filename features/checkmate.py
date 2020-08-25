@@ -1,3 +1,4 @@
+from ast import literal_eval
 from functools import cached_property
 
 import chess
@@ -14,7 +15,7 @@ class Checkmate(Features):
         self.our_color = self.board.turn
         self.their_color = not self.board.turn
 
-        self.pv = [chess.Move.from_uci(move) for move in eval(pv)]
+        self.pv = [chess.Move.from_uci(move) for move in pv]
         for move in self.pv:
             self.board.push(move)
 
@@ -24,7 +25,7 @@ class Checkmate(Features):
 
     @classmethod
     def from_row(cls, row):
-        return cls(row.fen, row.best_pv)
+        return cls(row.fen, literal_eval(row.best_pv))
 
     @cached_property
     def _their_king_ring_mask(self):
