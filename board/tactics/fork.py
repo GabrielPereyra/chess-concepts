@@ -1,10 +1,10 @@
 import chess
 
-from board import AugBoard
+import board
 
 
 def is_fork_simplest(fen, move):
-    aug = AugBoard(fen)
+    aug = board.AugBoard(fen)
     return (
         not aug.gives_checkmate(move)
         and len(
@@ -16,7 +16,7 @@ def is_fork_simplest(fen, move):
 
 
 def is_fork_simple(fen: str, move: chess.Move) -> bool:
-    aug = AugBoard(fen)
+    aug = board.AugBoard(fen)
     return (
         not aug.gives_checkmate(move)
         and len(
@@ -29,7 +29,7 @@ def is_fork_simple(fen: str, move: chess.Move) -> bool:
 
 
 def is_fork_see(fen, move):
-    aug = AugBoard(fen)
+    aug = board.AugBoard(fen)
     if aug.gives_checkmate(move):
         return False
 

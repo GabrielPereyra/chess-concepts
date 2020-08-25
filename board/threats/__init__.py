@@ -1,36 +1,28 @@
+from enum import IntEnum
+from typing import Dict, Callable
+
 import chess
 
-from board import AugBoard
+from .capture import creates_hanging_piece_threat_capture, creates_material_gain_capture
+from .mate import creates_mate_threat
 
 
-def creates_mate_threat(fen: str, move: chess.Move) -> bool:
-    aug = AugBoard(fen)
+# TODO: consider refactoring to enum.IntFlag if we want them to behave like bit flags
+# https://docs.python.org/3/library/enum.html#intflag
+class Threat(IntEnum):
+    NONE = 0
+    MATE = 1
+    HANGING_PIECE_CAPTURE = 2
+    MATERIAL_GAIN_CAPTURE = 3
 
-    if aug.has_mate():
-        return False
+    @classmethod
+    def detectors(cls) -> Dict["Threat", Callable[[str, chess.Move], bool]]:
+        return {
+            cls.MATE: creates_mate_threat,
+            cls.HANGING_PIECE_CAPTURE: creates_hanging_piece_threat_capture,
+            cls.MATERIAL_GAIN_CAPTURE: creates_material_gain_capture,
+        }
 
-    aug.push(move)
-    aug.push(chess.Move.null())
-    return aug.has_mate()
-
-
-def creates_capture_handing_piece_threat(fen: str, move: chess.Move) -> bool:
-    aug = AugBoard(fen)
-
-    if aug.has_hanging_piece_capture():
-        return False
-
-    aug.push(move)
-    aug.push(chess.Move.null())
-    return aug.has_hanging_piece_capture()
-
-
-def creates_positive_see_capture(fen: str, move: chess.Move) -> bool:
-    aug = AugBoard(fen)
-
-    if aug.has_positive_see_capture():
-        return False
-
-    aug.push(move)
-    aug.push(chess.Move.null())
-    return aug.has_positive_see_capture()
+    @classmethod
+    def detector(cls, threat: "Threat") -> Callable[[str, chess.Move], bool]:
+        return cls.detectors()[threat]

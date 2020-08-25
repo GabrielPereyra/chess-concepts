@@ -1,4 +1,5 @@
 from ast import literal_eval
+from typing import Iterable
 from functools import cached_property
 
 import chess
@@ -10,9 +11,9 @@ from features.abstract import Features
 
 
 class CheckmateType(Features):
-    def __init__(self, fen, pv):
+    def __init__(self, fen: str, pv: Iterable[str]):
         aug = AugBoard(fen)
-        pv = [chess.Move.from_uci(move) for move in literal_eval(pv)]
+        pv = [chess.Move.from_uci(move) for move in pv]
         for move in pv[:-1]:
             aug.push(move)
         self.fen = aug.fen()
@@ -23,7 +24,7 @@ class CheckmateType(Features):
 
     @classmethod
     def from_row(cls, row):
-        return cls(row.fen, row.best_pv)
+        return cls(row.fen, literal_eval(row.best_pv))
 
     @cached_property
     def is_back_rank_mate(self):

@@ -1,28 +1,31 @@
 from functools import cached_property
+from ast import literal_eval
+from typing import Iterable
 
 import chess
 
 from features.abstract import Features
+from board import AugBoard
 
 
 class BestPV(Features):
 
     csvs = ["lichess", "stockfish10"]
 
-    def __init__(self, fen, pv):
-        self.board = chess.Board(fen)
-        self.pv = [chess.Move.from_uci(move) for move in eval(pv)]
+    def __init__(self, fen: str, pv: Iterable[str]):
+        self.aug = AugBoard(fen)
+        self.pv = [chess.Move.from_uci(move) for move in pv]
 
     @classmethod
     def from_row(cls, row):
-        return cls(row.fen, row.best_pv)
+        return cls(row.fen, literal_eval(row.best_pv))
 
     @staticmethod
     def _number_of_captures(board, pv, color):
         count = 0
         board = board.copy()  # TODO: do we need to copy here?
         for move in pv:
-            count += board.turn == color and board.is_capture(move)
+            count += board.current_color == color and board.is_capture(move)
             board.push(move)
         return count
 
@@ -32,7 +35,7 @@ class BestPV(Features):
         board = board.copy()
         for move in pv:
             board.push(move)
-            count += board.turn == color and board.is_check()
+            count += board.current_color == color and board.is_check()
         return count
 
     @staticmethod
@@ -41,7 +44,7 @@ class BestPV(Features):
         squares = set()
         count = 0
         for move in pv:
-            if board.turn == color:
+            if board.current_color == color:
                 if move.from_square in squares:
                     squares.remove(move.from_square)
                 else:
@@ -50,29 +53,45 @@ class BestPV(Features):
             squares.add(move.to_square)
         return count
 
+    def _best_pv_tactics(self):
+        return self.aug.pv_tactics(self.pv)
+
+    # TODO: consider changing return type so it can handle multiple tactics
+    @cached_property
+    def best_pv_tactic(self):
+        return self._best_pv_tactics()[0]
+
+    def _best_pv_threats(self):
+        return self.aug.pv_threats(self.pv)
+
+    # TODO: consider changing return type so it can handle multiple tactics
+    @cached_property
+    def best_pv_threat(self):
+        return self._best_pv_threats()[0]
+
     @cached_property
     def best_pv_our_number_of_captures(self):
-        return self._number_of_captures(self.board, self.pv, self.board.turn)
+        return self._number_of_captures(self.aug, self.pv, self.aug.current_color)
 
     @cached_property
     def best_pv_their_number_of_captures(self):
-        return self._number_of_captures(self.board, self.pv, not self.board.turn)
+        return self._number_of_captures(self.aug, self.pv, self.aug.other_color)
 
     @cached_property
     def best_pv_our_number_of_checks(self):
-        return self._number_of_checks(self.board, self.pv, self.board.turn)
+        return self._number_of_checks(self.aug, self.pv, self.aug.current_color)
 
     @cached_property
     def best_pv_their_number_of_checks(self):
-        return self._number_of_checks(self.board, self.pv, not self.board.turn)
+        return self._number_of_checks(self.aug, self.pv, self.aug.other_color)
 
     @cached_property
     def best_pv_our_number_of_pieces_moved(self):
-        return self._number_of_pieces_moved(self.board, self.pv, self.board.turn)
+        return self._number_of_pieces_moved(self.aug, self.pv, self.aug.current_color)
 
     @cached_property
     def best_pv_their_number_of_pieces_moved(self):
-        return self._number_of_pieces_moved(self.board, self.pv, not self.board.turn)
+        return self._number_of_pieces_moved(self.aug, self.pv, self.aug.other_color)
 
     @staticmethod
     def _moved_piece_types(board, pv, color):
@@ -86,11 +105,11 @@ class BestPV(Features):
 
     @cached_property
     def best_pv_our_moved_piece_types(self):
-        return self._moved_piece_types(self.board.copy(), self.pv, self.board.turn)
+        return self._moved_piece_types(self.aug.copy(), self.pv, self.aug.current_color)
 
     @cached_property
     def best_pv_their_moved_piece_types(self):
-        return self._moved_piece_types(self.board.copy(), self.pv, not self.board.turn)
+        return self._moved_piece_types(self.aug.copy(), self.pv, self.aug.other_color)
 
     # @cached_property
     # def best_move_is_captured(self):

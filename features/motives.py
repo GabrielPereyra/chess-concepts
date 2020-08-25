@@ -3,13 +3,13 @@ from functools import cached_property
 import chess
 
 from board import AugBoard
-from board.motives.fork import is_fork_see as is_fork
-from board.motives.skewer import is_skewer_see as is_skewer
-from board.motives.pin import is_pin_see as is_pin
-from board.motives.discovered_attack import (
+from board.tactics.fork import is_fork_see as is_fork
+from board.tactics.skewer import is_skewer_see as is_skewer
+from board.tactics.pin import is_pin_see as is_pin
+from board.tactics.discovered_attack import (
     is_discovered_attack_see as is_discovered_attack,
 )
-from board.motives.sacrifice import is_sacrifice_see as is_sacrifice
+from board.tactics.sacrifice import is_sacrifice_see as is_sacrifice
 from features.abstract import Features
 
 

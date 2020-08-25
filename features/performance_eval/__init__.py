@@ -2,13 +2,13 @@ import json
 
 import chess
 
-from board.motives.fork import is_fork_simplest, is_fork_simple, is_fork_see
-from board.motives.discovered_attack import (
+from board.tactics.fork import is_fork_simplest, is_fork_simple, is_fork_see
+from board.tactics.discovered_attack import (
     is_discovered_attack_simple,
     is_discovered_attack_see,
 )
-from board.motives.skewer import is_skewer_see
-from board.motives.pin import is_pin_see
+from board.tactics.skewer import is_skewer_see
+from board.tactics.pin import is_pin_see
 from board.mates import is_smothered_mate, is_back_rank_mate
 from board.mates.arabian import (
     is_arabian_mate,
@@ -22,7 +22,7 @@ from board.threats import (
     creates_positive_see_capture,
 )
 
-from features.best_move import Tactic
+from board import Tactic
 
 TACTICS = [
     Tactic.FORK,

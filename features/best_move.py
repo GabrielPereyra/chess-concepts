@@ -1,28 +1,11 @@
-from enum import IntEnum
 from functools import cached_property
 
 import chess
 
+from board import AugBoard
 from features.abstract import Features
-from features.motives import (
-    is_discovered_attack,
-    is_skewer,
-    is_pin,
-    is_sacrifice,
-    is_fork,
-)
+from board.threats import creates_mate_threat
 from features.helpers import is_greater_value
-
-
-# TODO: consider refactoring to enum.IntFlag if we want them to behave like bit flags
-# https://docs.python.org/3/library/enum.html#intflag
-class Tactic(IntEnum):
-    NONE = 0
-    FORK = 1
-    DISCOVERED_ATTACK = 2
-    PIN = 3
-    SKEWER = 4
-    SACRIFICE = 5
 
 
 class BestMove(Features):
@@ -30,7 +13,7 @@ class BestMove(Features):
     csvs = ["lichess", "stockfish10"]
 
     def __init__(self, fen, move):
-        self.board = chess.Board(fen)
+        self.aug = AugBoard(fen)
         self.move = chess.Move.from_uci(move)
 
     # TODO: replace this with an attribute which specifies columns
@@ -40,11 +23,11 @@ class BestMove(Features):
 
     @cached_property
     def best_move_piece_type(self):
-        return self.board.piece_type_at(self.move.from_square)
+        return self.aug.piece_type_at(self.move.from_square)
 
     @cached_property
     def best_move_is_en_passant(self):
-        return self.board.is_en_passant(self.move)
+        return self.aug.is_en_passant(self.move)
 
     @cached_property
     def best_move_is_promotion(self):
@@ -52,7 +35,7 @@ class BestMove(Features):
 
     @cached_property
     def best_move_is_capture(self):
-        return self.board.is_capture(self.move)
+        return self.aug.is_capture(self.move)
 
     @cached_property
     def best_move_is_capture_higher_value(self):
@@ -62,7 +45,7 @@ class BestMove(Features):
 
     @cached_property
     def best_move_gives_check(self):
-        return self.board.gives_check(self.move)
+        return self.aug.gives_check(self.move)
 
     @cached_property
     def best_move_is_horizontal(self):
@@ -75,7 +58,7 @@ class BestMove(Features):
         """From the perspective of the current player, i.e. current player's pawns move up the board."""
         from_rank = chess.square_rank(self.move.from_square)
         to_rank = chess.square_rank(self.move.to_square)
-        if self.board.turn == chess.WHITE:
+        if self.aug.current_color == chess.WHITE:
             return from_rank < to_rank
         return from_rank > to_rank
 
@@ -94,11 +77,11 @@ class BestMove(Features):
 
     @cached_property
     def best_move_was_defended(self):
-        return self.board.is_attacked_by(self.board.turn, self.move.from_square)
+        return self.aug.is_attacked_by(self.aug.current_color, self.move.from_square)
 
     @cached_property
     def best_move_was_attacked(self):
-        return self.board.is_attacked_by(not self.board.turn, self.move.from_square)
+        return self.aug.is_attacked_by(self.aug.other_color, self.move.from_square)
 
     @cached_property
     def best_move_was_hanging(self):
@@ -108,20 +91,20 @@ class BestMove(Features):
     def best_move_captures_piece_type(self):
         if self.best_move_is_en_passant:
             return 1
-        captures_piece_type = self.board.piece_type_at(self.move.to_square)
+        captures_piece_type = self.aug.piece_type_at(self.move.to_square)
         return captures_piece_type if captures_piece_type else 0
 
     @cached_property
     def best_move_is_attacked(self):
-        board = self.board.copy()
+        board = self.aug.copy()
         board.push(self.move)
-        return board.is_attacked_by(board.turn, self.move.to_square)
+        return board.is_attacked_by(board.current_color, self.move.to_square)
 
     @cached_property
     def best_move_is_defended(self):
-        board = self.board.copy()
+        board = self.aug.copy()
         board.push(self.move)
-        return board.is_attacked_by(not board.turn, self.move.to_square)
+        return board.is_attacked_by(board.other_color, self.move.to_square)
 
     @cached_property
     def best_move_captures_hanging_piece(self):
@@ -129,10 +112,10 @@ class BestMove(Features):
 
     @cached_property
     def _best_move_pieces_attacked(self):
-        board = self.board.copy()
+        board = self.aug.copy()
         board.push(self.move)
         pieces_attacked_mask = board.attacks_mask(self.move.to_square)
-        pieces_attacked_mask &= board.occupied_co[board.turn]
+        pieces_attacked_mask &= board.occupied_co(board.current_color)
         return [
             board.piece_type_at(s) for s in chess.scan_reversed(pieces_attacked_mask)
         ]
@@ -150,17 +133,18 @@ class BestMove(Features):
             ]
         )
 
+    def _best_move_tactics(self):
+        return self.aug.move_tactics(self.move)
+
+    # TODO: consider changing return type so it can handle multiple tactics
     @cached_property
     def best_move_tactic(self):
-        fen = self.board.fen()
-        if is_sacrifice(fen, self.move):
-            return Tactic.SACRIFICE
-        if is_discovered_attack(fen, self.move):
-            return Tactic.DISCOVERED_ATTACK
-        if is_pin(fen, self.move):
-            return Tactic.PIN
-        if is_skewer(fen, self.move):
-            return Tactic.SKEWER
-        if is_fork(fen, self.move):
-            return Tactic.FORK
-        return Tactic.NONE
+        return self._best_move_tactics()[0]
+
+    def _best_move_threats(self):
+        return self.aug.move_threats(self.move)
+
+    # TODO: consider changing return type so it can handle multiple tactics
+    @cached_property
+    def best_move_threat(self):
+        return self._best_move_threats()[0]

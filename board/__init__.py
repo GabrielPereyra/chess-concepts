@@ -1,5 +1,7 @@
-from typing import Optional, Set, Tuple, Iterator
-from enum import IntFlag
+from typing import Optional, Set, Tuple, Iterator, Dict, List
+
+from board.tactics import Tactic
+from board.threats import Threat
 
 import chess
 
@@ -22,6 +24,9 @@ class AugBoard:
     @classmethod
     def from_board(cls, board: chess.Board):
         return cls(board.fen())
+
+    def copy(self):
+        return self.from_board(self._board)
 
     @property
     def current_color(self) -> bool:
@@ -57,6 +62,15 @@ class AugBoard:
 
     def is_checkmate(self) -> bool:
         return self._board.is_checkmate()
+
+    def is_en_passant(self, move: chess.Move) -> bool:
+        return self._board.is_en_passant(move)
+
+    def is_capture(self, move: chess.Move) -> bool:
+        return self._board.is_capture(move)
+
+    def is_check(self) -> bool:
+        return self._board.is_check()
 
     def fen(self) -> str:
         return self._board.fen()
@@ -159,6 +173,9 @@ class AugBoard:
         finally:
             self._board.pop()
 
+    def gives_check(self, move: chess.Move) -> bool:
+        return self._board.gives_check(move)
+
     def move_capturers(self, move: chess.Move) -> chess.SquareSet:
         self._board.push(move)
         try:
@@ -192,6 +209,9 @@ class AugBoard:
             self._board.attackers_mask(self.piece_color_at(square), square)
             != chess.BB_EMPTY
         )
+
+    def is_attacked_by(self, color: chess.Color, square: chess.Square) -> bool:
+        return self._board.is_attacked_by(color, square)
 
     def move_attacks(
         self,
@@ -236,3 +256,46 @@ class AugBoard:
                 (attacker, square) for attacker in self._board.attackers(color, square)
             )
         return res
+
+    def attacks_mask(self, square: chess.Square) -> chess.Bitboard:
+        return self._board.attacks_mask(square)
+
+    def occupied_co(self, color: chess.Color) -> chess.Bitboard:
+        return self._board.occupied_co[color]
+
+    def _pv_contains(self, pv: List[chess.Move], detectors: Dict, none_value) -> List:
+        detected = set()
+        aug = AugBoard(self.fen())
+        for i in range(0, len(pv), 2):
+            our_move = pv[i]
+            detected.update(
+                value
+                for value, detector in detectors.items()
+                if detector(aug.fen(), our_move)
+            )
+            aug.push(our_move)
+            if i + 1 < len(pv):
+                their_move = pv[i + 1]
+                aug.push(their_move)
+        return sorted(detected) if detected else [none_value]
+
+    def pv_tactics(self, pv: List[chess.Move]) -> List[Tactic]:
+        return self._pv_contains(pv, Tactic.detectors(), Tactic.NONE)
+
+    def move_tactics(self, move: chess.Move) -> List[Tactic]:
+        return self.pv_tactics(pv=[move])
+
+    def pv_threats(self, pv: List[chess.Move]) -> List[Threat]:
+        return self._pv_contains(pv, Threat.detectors(), Threat.NONE)
+
+    def move_threats(self, move: chess.Move) -> List[Threat]:
+        return self.pv_threats(pv=[move])
+
+
+if __name__ == "__main__":
+    fen = "r5k1/1p1q1pbp/6p1/2Pp4/p3nQ2/P4P2/B2B2PP/2R4K b - - 0 1"
+    pv = ["e4f2", "h1g1", "f2d3", "f4e3", "d3c1"]
+    pv = [chess.Move.from_uci(move_uci) for move_uci in pv]
+    aug = AugBoard(fen)
+    print(aug.pv_tactics(pv))
+    print(aug.move_tactics(pv[0]))

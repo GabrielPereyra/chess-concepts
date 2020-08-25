@@ -1,10 +1,10 @@
 import chess
 
-from board import AugBoard
+import board
 
 
 def is_discovered_attack_simple(fen, move):
-    aug = AugBoard(fen)
+    aug = board.AugBoard(fen)
 
     attackers_before_move = aug.attacking_pairs(aug.current_color)
     aug.push(move)
@@ -26,7 +26,7 @@ def is_discovered_attack_simple(fen, move):
 
 
 def is_discovered_attack_see(fen, move):
-    aug = AugBoard(fen)
+    aug = board.AugBoard(fen)
 
     attackers_before_move = aug.attacking_pairs(aug.current_color)
     aug.push(move)

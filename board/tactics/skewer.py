@@ -1,10 +1,10 @@
 import chess
 
-from board import AugBoard
+import board
 
 
 def is_skewer_see(fen: str, move: chess.Move) -> bool:
-    aug = AugBoard(fen)
+    aug = board.AugBoard(fen)
 
     if aug.piece_type_at(move.from_square) not in [
         chess.QUEEN,
@@ -34,7 +34,7 @@ def is_skewer_see(fen: str, move: chess.Move) -> bool:
         ):
             continue
 
-        without_attacked = AugBoard(aug.fen())
+        without_attacked = board.AugBoard(aug.fen())
         without_attacked.remove_piece_at(attacked)
 
         for some_attacker, new_attacked in without_attacked.attacking_pairs(
