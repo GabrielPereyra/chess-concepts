@@ -622,6 +622,13 @@ def test_discovered_attack(
             False,
             False,
         ),
+        # Not a skewer, it is rather a pin
+        (
+            "1B1k2nb/pp2p2p/4bnp1/2p5/2P3P1/7P/PP3P2/R3KB1R w KQ - 0 1",
+            ["b8e5"],
+            False,
+            False,
+        ),
     ],
 )
 def test_skewer(fen, pv, expected_contains_tactic, expected_is_first_move_tactic):

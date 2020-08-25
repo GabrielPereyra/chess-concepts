@@ -48,7 +48,7 @@ def is_skewer_see(fen: str, move: chess.Move) -> bool:
                     some_attacker == attacker,
                     attacked in chess.SquareSet.between(attacker, new_attacked),
                     without_attacked.piece_value_at(new_attacked)
-                    <= aug.piece_value_at(attacked),
+                    < aug.piece_value_at(attacked),
                 )
             ):
                 triples.append((attacker, attacked, new_attacked))
