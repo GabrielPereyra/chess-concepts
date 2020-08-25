@@ -120,12 +120,14 @@ class AugBoard:
             self.gives_checkmate(move) for move in self._board.generate_legal_moves()
         )
 
+    # TODO: the below implementation doesn't handle en passant moves
     def has_hanging_piece_capture(self):
         return any(
-            not self.is_square_defended(move.to_square)
+            self.piece_type_at(move.to_square) is not None and not self.is_square_defended(move.to_square)
             for move in self._board.generate_legal_captures()
         )
 
+    # TODO: the below implementation doesn't handle en passant moves
     def has_positive_see_capture(self):
         return any(
             self.see(move.to_square, move.from_square) > 0
