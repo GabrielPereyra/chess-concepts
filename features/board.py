@@ -1,4 +1,4 @@
-from enum import Enum
+from enum import IntEnum
 from functools import cached_property
 
 import chess
@@ -7,13 +7,13 @@ from features.abstract import Features
 from features.helpers import count_material
 
 
-class GamePhase(Enum):
+class GamePhase(IntEnum):
     OPENING = 0
     MIDDLEGAME = 1
     ENDGAME = 2
 
 
-class PositionOpenness(Enum):
+class PositionOpenness(IntEnum):
     OPEN = 0
     SEMI_OPEN = 1
     CLOSED = 2
