@@ -1,16 +1,17 @@
+import os
+import subprocess
 from functools import cached_property
 
-import click
 import chess
 import chess.engine
+import click
 import pandas as pd
 from chess.engine import _parse_uci_info
-import subprocess
 
 from features.abstract import Features
 
-STOCKFISH_PATH = "../Stockfish/src/stockfish"
-EVAL_STOCKFISH_PATH = "../Stockfish\ copy/src/stockfish"
+STOCKFISH_PATH = os.environ.get("STOCKFISH_PATH", "../Stockfish/src/stockfish")
+EVAL_STOCKFISH_PATH = os.environ.get("EVAL_STOCKFISH_PATH", "../Stockfish\ copy/src/stockfish")
 
 
 def stockfish_info(fen, move, engine, depth, multipv=None):
@@ -217,8 +218,6 @@ class StockfishEval(Features):
         return pd.DataFrame(feature_rows)
 
 
-import types
-
 # TODO: disgusting hack because feature class expects dir(cls) to expose all features which only works if they are defined as methods but for StockfishEval, we set them all as attributes in __init__. Need to think about how to refactor this.
 for feature in [
     "our_bishops_eg",
@@ -300,9 +299,7 @@ for feature in [
     "total_threats_eg",
     "total_threats_mg",
 ]:
-
     setattr(StockfishEval, feature, None)
-
 
 # TODO: how to store scores and pvs?
 # class Stockfish5_500(Stockfish):

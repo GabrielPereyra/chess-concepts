@@ -14,7 +14,7 @@ class BestPV(Features):
 
     def __init__(self, fen: str, pv: Iterable[str]):
         self.aug = AugBoard(fen)
-        self.pv = [chess.Move.from_uci(move) for move in pv]
+        self.pv = [chess.Move.from_uci(move) for move in eval(pv)]
 
     @classmethod
     def from_row(cls, row):
@@ -93,6 +93,17 @@ class BestPV(Features):
     def best_pv_their_number_of_pieces_moved(self):
         return self._number_of_pieces_moved(self.aug, self.pv, self.aug.other_color)
 
+    # TODO: maybe think about generators
+    # @cached_property
+    # def best_pv_numbers(self):
+    #     features = {}
+    #     for side_attr, side_name in [(self.aug.other_color, "their"), (self.aug.current_color, "our")]:
+    #         for method_name in ["_number_of_captures", "_number_of_checks", "_number_of_pieces_moved"]:
+    #             num = getattr(self, method_name)(self.aug, self.pv, side_attr)
+    #             features[f"best_pv_{side_name}{method_name}"] = num
+    #             features[f"best_pv_{side_name}{method_name}_normalized"] = num / len(self.pv)
+    #     return features
+
     @staticmethod
     def _moved_piece_types(board, pv, color):
         moved_piece_types = set()
@@ -110,6 +121,11 @@ class BestPV(Features):
     @cached_property
     def best_pv_their_moved_piece_types(self):
         return self._moved_piece_types(self.aug.copy(), self.pv, self.aug.other_color)
+
+    @cached_property
+    def best_pv_move_distance(self):
+        return sum([chess.square_distance(move.from_square, move.to_square) for move in self.pv])
+
 
     # @cached_property
     # def best_move_is_captured(self):

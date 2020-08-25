@@ -24,7 +24,14 @@ class Features:
     def features(self):
         feature_dict = {}
         for feature_name in self.feature_names():
-            feature_dict[feature_name] = getattr(self, feature_name)
+            feature_value = getattr(self, feature_name)
+            # if the feature class method returns a dictionary
+            # explode it to create features from the dict otherwise use atomic values for primitive types
+            if isinstance(feature_value, dict):
+                for k,v in feature_value.items():
+                    feature_dict[k] = v
+            else:
+                feature_dict[feature_name] = feature_value
         return feature_dict
 
     @classmethod

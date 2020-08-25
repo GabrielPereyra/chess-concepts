@@ -13,14 +13,14 @@ from features.abstract import Features
 class CheckmateType(Features):
     def __init__(self, fen: str, pv: Iterable[str]):
         aug = AugBoard(fen)
-        pv = [chess.Move.from_uci(move) for move in pv]
+        pv = [chess.Move.from_uci(move) for move in eval(pv)]
         for move in pv[:-1]:
             aug.push(move)
         self.fen = aug.fen()
         self.move = pv[-1]
 
-        if not aug.gives_checkmate(self.move):
-            print("wtf")
+        # if not aug.gives_checkmate(self.move):
+        #     print("wtf")
 
     @classmethod
     def from_row(cls, row):
