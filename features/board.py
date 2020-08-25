@@ -9,8 +9,8 @@ from features.helpers import count_material
 
 class GamePhase(Enum):
     OPENING = 0
-    ENDGAME = 1
-    MIDDLEGAME = 2
+    MIDDLEGAME = 1
+    ENDGAME = 2
 
 
 class PositionOpenness(Enum):

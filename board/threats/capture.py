@@ -6,6 +6,9 @@ import board
 def creates_hanging_piece_threat_capture(fen: str, move: chess.Move) -> bool:
     aug = board.AugBoard(fen)
 
+    if aug.gives_check(move):
+        return False
+
     if aug.has_hanging_piece_capture():
         return False
 
@@ -16,6 +19,9 @@ def creates_hanging_piece_threat_capture(fen: str, move: chess.Move) -> bool:
 
 def creates_material_gain_capture(fen: str, move: chess.Move) -> bool:
     aug = board.AugBoard(fen)
+
+    if aug.gives_check(move):
+        return False
 
     if aug.has_positive_see_capture():
         return False
