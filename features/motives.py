@@ -1,3 +1,4 @@
+from ast import literal_eval
 from functools import cached_property
 
 import chess
@@ -19,11 +20,11 @@ class Motives(Features):
 
     def __init__(self, fen, pv):
         self.fen = fen
-        self.pv = [chess.Move.from_uci(move) for move in eval(pv)]
+        self.pv = [chess.Move.from_uci(move) for move in pv]
 
     @classmethod
     def from_row(cls, row):
-        return cls(row.fen, row.best_pv)
+        return cls(row.fen, literal_eval(row.best_pv))
 
     @staticmethod
     def _contains_motive(fen, pv, motive_finder):

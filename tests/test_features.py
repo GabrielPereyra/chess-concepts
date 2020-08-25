@@ -98,12 +98,19 @@ def test_best_pv_features():
         ["e2e4", "e7e5", "g1f3", "b8c6", "f1b5", "a7a6", "b5c6", "d7c6"],
     )
     assert f.features() == {
+        "best_pv_move_distance": 15,
         "best_pv_our_number_of_captures": 1,
         "best_pv_our_number_of_checks": 0,
         "best_pv_our_number_of_pieces_moved": 3,
         "best_pv_their_number_of_captures": 1,
         "best_pv_their_number_of_checks": 0,
         "best_pv_their_number_of_pieces_moved": 4,
+        "best_pv_our_number_of_captures_normalized": 0.125,
+        "best_pv_our_number_of_checks_normalized": 0.0,
+        "best_pv_our_number_of_pieces_moved_normalized": 0.375,
+        "best_pv_their_number_of_captures_normalized": 0.125,
+        "best_pv_their_number_of_checks_normalized": 0.0,
+        "best_pv_their_number_of_pieces_moved_normalized": 0.5,
         "best_pv_our_moved_piece_types": [chess.PAWN, chess.KNIGHT, chess.BISHOP],
         "best_pv_their_moved_piece_types": [chess.PAWN, chess.KNIGHT],
         "best_pv_tactic": Tactic.NONE,
@@ -805,6 +812,7 @@ def test_clock_features():
     assert f.features() == {
         "approximate_game_length": 100,
         "relative_time_remaining": 0.3,
+        "time_control_name": "bullet",
     }
 
 
@@ -963,4 +971,4 @@ def test_features_list():
     df = features.FeatureList(
         [features.Board, features.BestMove, features.BestPV]
     ).from_df(df)
-    assert len(df.columns) == 77
+    assert len(df.columns) == 78

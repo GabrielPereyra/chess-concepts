@@ -9,3 +9,4 @@ pgns
 .DS_Store
 .coverage
 features/performance_eval/data/
+.idea/

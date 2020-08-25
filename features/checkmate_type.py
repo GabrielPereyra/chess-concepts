@@ -19,8 +19,8 @@ class CheckmateType(Features):
         self.fen = aug.fen()
         self.move = pv[-1]
 
-        if not aug.gives_checkmate(self.move):
-            print("wtf")
+        # if not aug.gives_checkmate(self.move):
+        #     print("wtf")
 
     @classmethod
     def from_row(cls, row):
