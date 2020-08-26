@@ -108,10 +108,16 @@ class AttackedPieces():
 
         df['is_attacked_by_lower_value'] = df['value_attacked'] > df['value_attacking']
 
-        df.groupby(['color_attacking', 'color_attacked',  'attacked']).agg({'is_attacked_by_lower_value': any})
+        df = df.groupby('')
+
+        # TODO: need to group by.
+        self.our_pieces_attacked_by_lower_value = len(df[
+            (df['color_attacked'] == board.turn) &
+            (df['color_attacking'] != board.turn) &
+            df['is_attacked_by_lower_value']
+        ])
 
         import pdb; pdb.set_trace()
-
 
 
 if __name__ == '__main__':
