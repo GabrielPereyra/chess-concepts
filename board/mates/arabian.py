@@ -1,9 +1,9 @@
 import chess
 
-from board import AugBoard
+import board
 
 
-def is_arabian_mate(fen: str, move: chess.Move):
+def is_arabian_mate_classic(fen: str, move: chess.Move):
     """
     According to Wikipedia:
     > In the Arabian mate, the knight and the rook team up to trap the opposing king on a corner of the board.
@@ -13,7 +13,7 @@ def is_arabian_mate(fen: str, move: chess.Move):
     source: https://en.wikipedia.org/wiki/Checkmate_pattern#Arabian_mate
     """
 
-    aug = AugBoard(fen)
+    aug = board.AugBoard(fen)
 
     their_king = aug.other_color_king()
 
@@ -49,7 +49,7 @@ def is_arabian_mate_extra_extended(fen: str, move: chess.Move):
     Same as in Wikipedia definition except that King can be on any square.
     """
 
-    aug = AugBoard(fen)
+    aug = board.AugBoard(fen)
 
     king = aug.other_color_king()
 
@@ -88,7 +88,7 @@ def is_arabian_mate_extended(fen: str, move: chess.Move):
     """
     Same as in Wikipedia definition except that King can be on any border square.
     """
-    aug = AugBoard(fen)
+    aug = board.AugBoard(fen)
 
     king = aug.other_color_king()
 

@@ -1,6 +1,6 @@
 import chess
 
-from board import AugBoard
+import board
 
 
 def is_back_rank_mate(fen, move):
@@ -13,7 +13,7 @@ def is_back_rank_mate(fen, move):
     source: https://en.wikipedia.org/wiki/Back-rank_checkmate
     """
 
-    aug = AugBoard(fen)
+    aug = board.AugBoard(fen)
     their_back_rank = 7 if aug.other_color == chess.BLACK else 0
 
     their_king = aug.other_color_king()
