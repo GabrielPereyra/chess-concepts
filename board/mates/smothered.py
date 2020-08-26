@@ -1,4 +1,4 @@
-from board import AugBoard
+import board
 
 
 def is_smothered_mate(fen, move):
@@ -9,7 +9,7 @@ def is_smothered_mate(fen, move):
     source: https://en.wikipedia.org/wiki/Smothered_mate
     """
 
-    aug = AugBoard(fen)
+    aug = board.AugBoard(fen)
     aug.push(move)
     if not aug.is_checkmate():
         return False

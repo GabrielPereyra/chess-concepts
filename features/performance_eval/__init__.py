@@ -11,15 +11,14 @@ from board.tactics.skewer import is_skewer_see
 from board.tactics.pin import is_pin_see
 from board.mates import is_smothered_mate, is_back_rank_mate
 from board.mates.arabian import (
-    is_arabian_mate,
+    is_arabian_mate_classic,
     is_arabian_mate_extended,
     is_arabian_mate_extra_extended,
 )
-from board.mates.mating_net import get_move_mating_net_piece_types
 from board.threats import (
     creates_mate_threat,
-    creates_capture_handing_piece_threat,
-    creates_positive_see_capture,
+    creates_hanging_piece_threat_capture,
+    creates_material_gain_capture,
 )
 
 from board import Tactic
@@ -99,7 +98,7 @@ def get_detectors():
         "BackrankMate": [is_back_rank_mate,],
         "SmotheredMate": [is_smothered_mate,],
         "ArabianMate": [
-            is_arabian_mate,
+            is_arabian_mate_classic,
             is_arabian_mate_extended,
             is_arabian_mate_extra_extended,
         ],

@@ -7,7 +7,7 @@ import chess.engine
 import features
 import pandas as pd
 from features.stockfish import STOCKFISH_PATH
-from board import Tactic, Threat
+from board import Tactic, Threat, CheckmateType
 from features.helpers import square_from_name
 from features.board import GamePhase, PositionOpenness
 
@@ -219,7 +219,7 @@ def test_position_openness(fen, expected):
 )
 def test_smothered_mate(fen, pv, expected):
     f = features.CheckmateType(fen, pv)
-    assert f.features()["is_smothered_mate"] == expected
+    assert (CheckmateType.SMOTHERED in f._checkmate_types()) == expected
 
 
 @pytest.mark.parametrize(
@@ -239,7 +239,79 @@ def test_smothered_mate(fen, pv, expected):
 )
 def test_back_rank_mate(fen, pv, expected):
     f = features.CheckmateType(fen, pv)
-    assert f.features()["is_back_rank_mate"] == expected
+    assert (CheckmateType.BACK_RANK in f._checkmate_types()) == expected
+
+
+@pytest.mark.parametrize(
+    "fen, pv, expected",
+    [
+        # https://lichess.org/analysis/8/8/8/7k/8/6q1/5r2/4K3_b_-_-_0_1
+        ("8/8/8/7k/8/6q1/5r2/4K3 b - - 0 1", ["g3g1"], True)
+    ],
+)
+def test_mate_with_queen_rook(fen, pv, expected):
+    f = features.CheckmateType(fen, pv)
+    assert (CheckmateType.QUEEN_ROOK in f._checkmate_types()) == expected
+
+
+@pytest.mark.parametrize(
+    "fen, pv, expected",
+    [
+        # https://lichess.org/analysis/8/8/8/7k/8/6r1/7r/4K3_b_-_-_0_1
+        ("8/8/8/7k/8/6r1/7r/4K3 b - - 0 1", ["g3g1"], True)
+    ],
+)
+def test_mate_with_rook_rook(fen, pv, expected):
+    f = features.CheckmateType(fen, pv)
+    assert (CheckmateType.ROOK_ROOK in f._checkmate_types()) == expected
+
+
+@pytest.mark.parametrize(
+    "fen, pv, expected",
+    [
+        # https://lichess.org/analysis/3Q4/8/8/7k/5K2/8/8/8_w_-_-_0_1
+        ("3Q4/8/8/7k/5K2/8/8/8 w - - 0 1", ["d8g5"], True)
+    ],
+)
+def test_mate_with_king_queen(fen, pv, expected):
+    f = features.CheckmateType(fen, pv)
+    assert (CheckmateType.KING_QUEEN in f._checkmate_types()) == expected
+
+
+@pytest.mark.parametrize(
+    "fen, pv, expected",
+    [
+        # https://lichess.org/analysis/8/5R2/8/5K1k/8/8/8/8_w_-_-_0_1
+        ("8/5R2/8/5K1k/8/8/8/8 w - - 0 1", ["f7h7"], True)
+    ],
+)
+def test_mate_with_king_rook(fen, pv, expected):
+    f = features.CheckmateType(fen, pv)
+    assert (CheckmateType.KING_ROOK in f._checkmate_types()) == expected
+
+
+@pytest.mark.parametrize(
+    "fen, pv, expected",
+    [
+        # https://lichess.org/analysis/7k/5K2/8/5BB1/8/8/8/8_w_-_-_0_1
+        ("7k/5K2/8/5BB1/8/8/8/8 w - - 0 1", ["g5f6"], True)
+    ],
+)
+def test_mate_with_king_bishop_bishop(fen, pv, expected):
+    f = features.CheckmateType(fen, pv)
+    assert (CheckmateType.KING_BISHOP_BISHOP in f._checkmate_types()) == expected
+
+
+@pytest.mark.parametrize(
+    "fen, pv, expected",
+    [
+        # https://lichess.org/analysis/6k1/4B3/6K1/5N2/8/8/8/8_w_-_-_0_1
+        ("6k1/4B3/6K1/5N2/8/8/8/8 w - - 0 1", ["f5h6", "g8h8", "e7f6"], True)
+    ],
+)
+def test_mate_with_king_bishop_knight(fen, pv, expected):
+    f = features.CheckmateType(fen, pv)
+    assert (CheckmateType.KING_BISHOP_KNIGHT in f._checkmate_types()) == expected
 
 
 @pytest.mark.parametrize(

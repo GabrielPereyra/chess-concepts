@@ -1,9 +1,11 @@
-from typing import Optional, Set, Tuple, Iterator, Dict, List
+from typing import Optional, Iterator, Set, Tuple, List, Dict
 
-from board.tactics import Tactic
-from board.threats import Threat
+from .tactics import Tactic
+from .threats import Threat
+from .mates import CheckmateType
 
 import chess
+
 
 PIECE_TYPE_VALUE = {
     None: 0,
@@ -123,7 +125,8 @@ class AugBoard:
     # TODO: the below implementation doesn't handle en passant moves
     def has_hanging_piece_capture(self):
         return any(
-            self.piece_type_at(move.to_square) is not None and not self.is_square_defended(move.to_square)
+            self.piece_type_at(move.to_square) is not None
+            and not self.is_square_defended(move.to_square)
             for move in self._board.generate_legal_captures()
         )
 
@@ -292,6 +295,12 @@ class AugBoard:
 
     def move_threats(self, move: chess.Move) -> List[Threat]:
         return self.pv_threats(pv=[move])
+
+    def pv_checkmate_types(self, pv: List[chess.Move]) -> List[CheckmateType]:
+        return self._pv_contains(pv, CheckmateType.detectors(), CheckmateType.NONE)
+
+    def move_checkmate_types(self, move: chess.Move) -> List[CheckmateType]:
+        return self.pv_checkmate_types(pv=[move])
 
 
 if __name__ == "__main__":
