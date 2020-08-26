@@ -186,6 +186,10 @@ class Board(Features):
         return self.our_bishops + self.our_knights
 
     @cached_property
+    def our_bishop_pair(self):
+        return self.our_bishops >= 2 and self.their_bishops <= 1
+
+    @cached_property
     def their_piece_count(self):
         return chess.popcount(self.board.occupied_co[not self.board.turn])
 
@@ -220,6 +224,10 @@ class Board(Features):
     @cached_property
     def their_minors(self):
         return self.their_bishops + self.their_knights
+
+    @cached_property
+    def their_bishop_pair(self):
+        return self.their_bishops >= 2 and self.our_bishops <= 1
 
     @cached_property
     def piece_count(self):
