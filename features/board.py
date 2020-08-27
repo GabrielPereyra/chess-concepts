@@ -311,13 +311,61 @@ class Board(Features):
             return PositionOpenness.SEMI_OPEN
         return PositionOpenness.CLOSED
 
+    def _non_pawn_pieces_on_origin_squares(self, color: chess.Color):
+        origins = {
+            chess.A1: chess.ROOK,
+            chess.B1: chess.KNIGHT,
+            chess.C1: chess.BISHOP,
+            chess.D1: chess.QUEEN,
+            chess.E1: chess.KING,
+            chess.F1: chess.BISHOP,
+            chess.G1: chess.KNIGHT,
+            chess.H1: chess.KNIGHT,
+        }
+        piece_types = []
+        for square, expected in origins.items():
+            if color == chess.BLACK:
+                square = chess.square_mirror(square)
+            piece_type = self.board.piece_type_at(square)
+            if piece_type == expected:
+                piece_types.append(piece_type)
+        return piece_types
+
     @cached_property
     def phase(self):
-        if self.fullmove_number < 15:
-            return GamePhase.OPENING
-        if self.material_count < 39:
+        our_pieces_on_origin_squares = self._non_pawn_pieces_on_origin_squares(
+            self.turn
+        )
+        their_pieces_on_origin_squares = self._non_pawn_pieces_on_origin_squares(
+            not self.turn
+        )
+
+        def is_endgame_phase(num_non_pawn_pieces, num_queens, pieces_on_origin_squares):
+            return num_non_pawn_pieces <= 4 or (
+                num_non_pawn_pieces == 5
+                and num_queens == 0
+                and len(pieces_on_origin_squares) <= 2
+            )
+
+        our_endgame_phase = is_endgame_phase(
+            self.our_non_pawn_pieces,
+            self.our_queens,
+            self._non_pawn_pieces_on_origin_squares(self.turn),
+        )
+        their_endgame_phase = is_endgame_phase(
+            self.their_non_pawn_pieces,
+            self.their_queens,
+            self._non_pawn_pieces_on_origin_squares(not self.turn),
+        )
+        if our_endgame_phase and their_endgame_phase:
             return GamePhase.ENDGAME
-        return GamePhase.MIDDLEGAME
+
+        if (
+            min(len(our_pieces_on_origin_squares), len(their_pieces_on_origin_squares))
+            <= 2
+        ):
+            return GamePhase.MIDDLEGAME
+        return GamePhase.OPENING
 
     @cached_property
     def endgame_type(self):

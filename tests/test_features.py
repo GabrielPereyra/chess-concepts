@@ -147,6 +147,85 @@ def test_locked_pawns(fen, expected):
 @pytest.mark.parametrize(
     "fen, expected",
     [
+        # source: https://www.chessstrategyonline.com/content/tutorials/basic-chess-concepts-phases-of-the-game
+        (
+            "r1bqkb1r/pp2pppp/2np1n2/6B1/3NP3/2N5/PPP2PPP/R2QKB1R w KQkq - 0 1",
+            GamePhase.OPENING,
+        ),
+        (
+            "r5k1/4bppp/p1q1p3/2p1P3/Pr4n1/1PNQB3/2P3PP/3R1RK1 w - - 0 1",
+            GamePhase.MIDDLEGAME,
+        ),
+        ("8/5ppk/4p2p/4P3/8/1r6/p5P1/4R1K1 w - - 0 1", GamePhase.ENDGAME),
+        # source: https://www.chess.com/forum/view/general/the-3-chess-phases
+        (
+            "r1bq1rk1/pppp1ppp/2n2n2/2b1p3/2B1P3/2N2N2/PPPP1PPP/R1BQ1RK1 w - - 0 1",
+            GamePhase.OPENING,
+        ),
+        (
+            "1q3rk1/3n1rbp/1p1p2p1/p1pPp3/2P1PpP1/PPNB1P2/1KQ4P/3R3R w - - 0 1",
+            GamePhase.MIDDLEGAME,
+        ),
+        (
+            "1q3r1k/3n1rbp/1p1p2p1/p1pPp1PP/2P1PpB1/PPN2P2/1K5Q/6RR b - - 0 8",
+            GamePhase.MIDDLEGAME,
+        ),
+        ("8/1p3pp1/p1krpn1p/P6P/2P2PP1/2B5/1PK5/4R3 w - - 0 1", GamePhase.ENDGAME),
+        ("2Q5/8/p3p3/P4p1k/8/8/8/3K4 b - - 0 13", GamePhase.ENDGAME),
+        # source: https://www.mark-weeks.com/aboutcom/ble24phs.htm
+        (
+            "r1bq1rk1/pp1nbppp/2p1pn2/3p2B1/2PP4/P1NBPN2/1P3PPP/R2QK2R w KQ - 0 1",
+            GamePhase.OPENING,
+        ),
+        (
+            "2r2r2/pp1bqpk1/1n3npp/4p3/4P3/P4NNP/BP1Q1PP1/2R2RK1 w - - 0 1",
+            GamePhase.MIDDLEGAME,
+        ),
+        ("8/5p1k/5rpp/8/P2R3P/6P1/5PK1/8 w - - 0 1", GamePhase.ENDGAME),
+        # source: https://thechessworld.com/articles/middle-game/7-most-important-middlegame-principles/
+        (
+            "r2q1rk1/1p1b1ppp/p1n1pn2/3p4/1P3B2/P1NQ1N1P/1P3PP1/3RR1K1 w - - 0 1",
+            GamePhase.MIDDLEGAME,
+        ),
+        (
+            "r4rk1/pb2ppbp/1p3np1/8/2P5/1PN1pN2/1B1PQPPP/3R1RK1 w - - 0 1",
+            GamePhase.MIDDLEGAME,
+        ),
+        # TODO discuss how the one below should be classified
+        ("1r2r1k1/p4ppp/b1p2n2/8/8/P1N2P2/1P3PBP/1K1RR3 w - - 0 1", GamePhase.ENDGAME),
+        (
+            "2kr2r1/1pp2p2/p1n4p/4n3/P5pP/N1P3P1/1PQ2PBK/3R1R2 w - - 0 1",
+            GamePhase.MIDDLEGAME,
+        ),
+        (
+            "1k1rr3/1pp1qpp1/p1n2nbp/8/PP2pP2/1NP1N1P1/2Q3BP/4RR1K w - - 0 1",
+            GamePhase.MIDDLEGAME,
+        ),
+        (
+            "r4rk1/pp2qpbp/4pnp1/3p4/3P4/P3PP2/1PR1NQPP/2R2BK1 w - - 0 1",
+            GamePhase.MIDDLEGAME,
+        ),
+        (
+            "2rr2k1/pq3ppp/1pp2nn1/8/1P2P3/PB3P2/1B4PP/1Q1R1RK1 w - - 0 1",
+            GamePhase.MIDDLEGAME,
+        ),
+        # source: https://thechessworld.com/articles/endgame/5-most-effective-endgame-ideas-every-beginner-should-know/
+        (
+            "r1b1r3/pp3p2/2p2k1p/P3p1p1/6P1/1P2R2P/2P1PPB1/2KR4 w - - 0 1",
+            GamePhase.ENDGAME,
+        ),
+        ("R7/5p2/P5pp/8/7P/6P1/r4PK1/8 w - - 0 1", GamePhase.ENDGAME),
+        ("3rr1k1/ppp2pbp/6p1/8/6b1/1NP1B3/PP3PPP/R4RK1 w - - 0 1", GamePhase.ENDGAME),
+    ],
+)
+def test_game_phase(fen, expected):
+    phase = features.Board(fen).phase
+    assert phase == expected
+
+
+@pytest.mark.parametrize(
+    "fen, expected",
+    [
         # https://lichess.org/analysis/rnbqnrk1/pp2bppp/3p4/2pPp3/2P1P3/2NBB3/PP2QPPP/R3K1NR_w_KQ_-_0_1
         (
             "rnbqnrk1/pp2bppp/3p4/2pPp3/2P1P3/2NBB3/PP2QPPP/R3K1NR w KQ - 0 1",
