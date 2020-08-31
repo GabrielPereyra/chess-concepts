@@ -1,19 +1,14 @@
-import lichess.api
-from lichess.format import SINGLE_PGN
+import requests
 
 
-username = 'pawn_f_kennedy'
+username = 'DrDrunkenstein'
 
 
-pgn = lichess.api.user_games(
-    username,
-    format=SINGLE_PGN,
-    clocks=True,
-    evals=True,
-    opening=True,
-    # auth='API TOKEN'
-)
+url = 'https://lichess.org/api/games/user/{}?analysed=1&evals=1&clocks=1&opening=1'.format(username)
 
 
-with open('pgns/{}.pgn'.format(username), 'w') as f:
-    f.write(pgn)
+r = requests.get(url)
+
+
+with open('pgns/{}.pgn'.format(username.lower()), 'w') as f:
+    f.write(r.text)
