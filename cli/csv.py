@@ -8,11 +8,10 @@ import chess.engine
 import pandas as pd
 import datetime
 import features
-from tqdm import tqdm
-
-LICHESS_PGN_PATH = "pgns/lichess_db_standard_rated_{year}-{month:0>2}.pgn"
-LICHESS_CSV_PATH = "csvs/lichess/{year}-{month:0>2}/"
-FEATURE_CSV_PATH = "csvs/{feature_name}/{year}-{month:0>2}/"
+LICHESS_PGN_NAME = 'lichess_db_standard_rated_{year}-{month:0>2}'
+PGN_PATH = 'pgns/{name}.pgn'
+CSV_PATH = 'csvs/lichess/{name}/'
+FEATURE_CSV_PATH = "csvs/{feature}/{name}/"
 SHARD_SIZE = 100000
 os.makedirs("csvs", exist_ok=True)
 os.makedirs("pgns", exist_ok=True)
@@ -123,6 +122,8 @@ def game_to_rows(game):
         if score is None:
             return rows
 
+        # TODO: remove abandoned games.
+
         row = {
             "elo": elo,
             "elo_bin": int(int(elo) / 100) * 100,
@@ -159,9 +160,9 @@ def write_shard(rows, csv_path, shard):
     print("wrote shard {}".format(shard))
 
 
-def lichess_month_pgn_to_csv(year, month):
-    csv_path = LICHESS_CSV_PATH.format(year=year, month=month)
-    pgn_path = LICHESS_PGN_PATH.format(year=year, month=month)
+def pgn_to_csv(name):
+    pgn_path = PGN_PATH.format(name=name)
+    csv_path = CSV_PATH.format(name=name)
     os.makedirs(csv_path, exist_ok=True)
     pgn = open(pgn_path)
 
@@ -200,48 +201,57 @@ def lichess_month_pgn_to_csv(year, month):
     write_shard(rows, csv_path, shard)
 
 
+def get_name(name, year, month):
+    if name is None:
+        if year is None and month is None:
+            raise ValueError('Must specify name or year and month.')
+        else:
+            name = LICHESS_PGN_NAME.format(year=year, month=month)
+    else:
+        return name
+
+
 @click.group()
 def cli():
     pass
 
 
 @cli.command()
-@click.argument("year", type=int)
-@click.argument("month", type=int)
-def lichess(year, month):
-    """Convert lichess month pgn to csv. Expects a pgn file in the pgns/ dir formatted lichess_db_standard_rated_{year}-{month}.pgn. You can download these from https://database.lichess.org/."""
-    lichess_month_pgn_to_csv(year, month)
+@click.option("--name", help='name of csv to use.')
+@click.option("--year", type=int, help='year of lichess csv to use.')
+@click.option("--month", type=int, help='month of lichess csv to use.')
+def pgn(name, year, month):
+    """Convert a pgn to csv. Expects a pgn file to exist at pgns/{name}. You can download these from https://database.lichess.org/."""
+    name = get_name(name, year, month)
+    pgn_to_csv(name)
 
 
 @cli.command()
-@click.argument("year")
-@click.argument("month")
-@click.argument("feature_name")
+@click.argument("feature")
+@click.option("--name", help='name of csv to use.')
+@click.option("--year", type=int, help='year of lichess csv to use.')
+@click.option("--month", type=int, help='month of lichess csv to use.')
 @click.option("--num_shards", type=int, help="number of shards to use.")
-def feature(year, month, feature_name, num_shards):
+def feature(feature, name, year, month, num_shards):
     """
     Generate feature csvs for all shards in csvs/{year}-{month}.
 
-    year: year of lichess pgn.
-
-    month: month of lichess pgn.
-
-    feature_name: class name of feature.
+    feature: class name of feature.
     """
 
     # TODO: handle case where user passes a lowercase feature name.
 
-    path = LICHESS_CSV_PATH.format(year=year, month=month)
+    get_name(name, year, month)
+
+    path = CSV_PATH.format(name=name)
     if num_shards is None:
         num_shards = len(os.listdir(path))
 
-    feature_class = getattr(features, feature_name)
-    feature_dir = FEATURE_CSV_PATH.format(
-        feature_name=feature_name.lower(), year=year, month=month
-    )
+    feature_class = getattr(features, feature)
+    feature_dir = FEATURE_CSV_PATH.format(feature=feature.lower(), name=name)
     os.makedirs(feature_dir, exist_ok=True)
-    for shard in tqdm(range(num_shards)):
-        df = utils.get_df(feature_class.csvs, years=[year], months=[month], shard=shard)
+    for shard in range(num_shards):
+        df = utils.get_df(name, feature_class.csvs, shard=shard)
         feature_df = feature_class.from_df(df)
         feature_df.to_csv(feature_dir + str(shard) + ".csv", index=False)
         print("wrote shard {}".format(shard))
