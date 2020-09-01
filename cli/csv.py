@@ -73,7 +73,7 @@ def winning_chances(score, prev_score, turn):
     def score_to_winning_chances(score):
         if score.is_mate():
             cp = (21 - min(10, abs(score.mate()))) * 100
-            cp *= 1 if score.mate() > 0 else -1
+            cp *= 1 if score.mate() >= 0 else -1
         else:
             cp = min(max(-1000, score.cp), 1000)
         return 2 / (1 + math.exp(-0.004 * cp)) - 1
@@ -184,6 +184,8 @@ def pgn_to_csv(name):
 
         if game is None:
             break
+        if game.headers['Termination'] == 'Abandoned':
+            continue
         if game.headers["WhiteElo"] == "?":
             continue
         if game.headers["BlackElo"] == "?":
@@ -206,7 +208,7 @@ def get_name(name, year, month):
         if year is None and month is None:
             raise ValueError('Must specify name or year and month.')
         else:
-            name = LICHESS_PGN_NAME.format(year=year, month=month)
+            return LICHESS_PGN_NAME.format(year=year, month=month)
     else:
         return name
 
@@ -227,16 +229,16 @@ def pgn(name, year, month):
 
 
 @cli.command()
-@click.argument("feature")
+@click.argument("feature_names", nargs=-1)
 @click.option("--name", help='name of csv to use.')
 @click.option("--year", type=int, help='year of lichess csv to use.')
 @click.option("--month", type=int, help='month of lichess csv to use.')
 @click.option("--num_shards", type=int, help="number of shards to use.")
-def feature(feature, name, year, month, num_shards):
+def feature(feature_names, name, year, month, num_shards):
     """
     Generate feature csvs for all shards in csvs/{year}-{month}.
 
-    feature: class name of feature.
+    features: name of feature classes to generate shards for.
     """
 
     # TODO: handle case where user passes a lowercase feature name.
@@ -247,14 +249,16 @@ def feature(feature, name, year, month, num_shards):
     if num_shards is None:
         num_shards = len(os.listdir(path))
 
-    feature_class = getattr(features, feature)
-    feature_dir = FEATURE_CSV_PATH.format(feature=feature.lower(), name=name)
-    os.makedirs(feature_dir, exist_ok=True)
-    for shard in range(num_shards):
-        df = utils.get_df(name, feature_class.csvs, shard=shard)
-        feature_df = feature_class.from_df(df)
-        feature_df.to_csv(feature_dir + str(shard) + ".csv", index=False)
-        print("wrote shard {}".format(shard))
+    for feature in feature_names:
+        print(feature)
+        feature_class = getattr(features, feature)
+        feature_dir = FEATURE_CSV_PATH.format(feature=feature.lower(), name=name)
+        os.makedirs(feature_dir, exist_ok=True)
+        for shard in range(num_shards):
+            df = utils.get_df(name, feature_class.csvs, shard=shard)
+            feature_df = feature_class.from_df(df)
+            feature_df.to_csv(feature_dir + str(shard) + ".csv", index=False)
+            print("wrote shard {}".format(shard))
 
 
 if __name__ == "__main__":
