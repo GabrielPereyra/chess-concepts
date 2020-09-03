@@ -31,13 +31,6 @@ def test_boards():
     assert result.exit_code == 0
 
 
-def test_plot():
-    from cli.plot import cli
-
-    result = runner.invoke(cli, ["hist", "0", "0", "elo", "--testing"])
-    assert result.exit_code == 0
-
-
 def test_model():
     from cli.model import cli
 
