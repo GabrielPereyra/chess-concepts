@@ -11,7 +11,9 @@ from chess.engine import _parse_uci_info
 from features.abstract import Features
 
 STOCKFISH_PATH = os.environ.get("STOCKFISH_PATH", "../Stockfish/src/stockfish")
-EVAL_STOCKFISH_PATH = os.environ.get("EVAL_STOCKFISH_PATH", "../Stockfish\ copy/src/stockfish")
+EVAL_STOCKFISH_PATH = os.environ.get(
+    "EVAL_STOCKFISH_PATH", "../Stockfish\ copy/src/stockfish"
+)
 
 
 def stockfish_info(fen, move, engine, depth, multipv=None):

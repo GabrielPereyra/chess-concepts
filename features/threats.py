@@ -1,7 +1,8 @@
 import chess
 import itertools
 import pandas as pd
-pd.set_option('display.max_rows', 1000)
+
+pd.set_option("display.max_rows", 1000)
 
 
 PIECE_TYPE_VALUE = {
@@ -15,8 +16,7 @@ PIECE_TYPE_VALUE = {
 }
 
 
-class Square():
-
+class Square:
     def __init__(self, board, square):
         self.square = square
         self.rank = chess.square_rank(square)
@@ -24,7 +24,7 @@ class Square():
         self.is_light = bool(square % 2)
 
 
-class Piece():
+class Piece:
 
     # TODO: is_minor / major / slider?
 
@@ -39,11 +39,10 @@ class Piece():
     def df(cls, board):
         pieces = chess.scan_reversed(board.occupied)
         df = pd.DataFrame([cls(board, p).__dict__ for p in pieces])
-        return df.set_index('square')
+        return df.set_index("square")
 
 
-class Move():
-
+class Move:
     def __init__(self, board, move):
         self.from_square = move.from_square
         self.to_square = move.to_square
@@ -58,30 +57,27 @@ class Move():
         return pd.DataFrame([cls(board, m).__dict__ for m in board.legal_moves])
 
 
-class Moves():
-
+class Moves:
     def __init__(self, fen):
         df = Move.df(chess.Board(fen))
         self.num_moves = len(df)
-        self.reachable_squares = len(df['to_square'].unique())
-        self.num_checks = df['gives_check'].sum()
-        self.num_captures = df['is_capture'].sum()
+        self.reachable_squares = len(df["to_square"].unique())
+        self.num_checks = df["gives_check"].sum()
+        self.num_captures = df["is_capture"].sum()
 
 
-class Pieces():
-
+class Pieces:
     def __init__(self, fen):
         df = Piece.df(chess.Board(fen))
 
-        piece_counts = df.groupby(['color', 'piece_type']).size()
+        piece_counts = df.groupby(["color", "piece_type"]).size()
         for (color, piece_type), count in piece_counts.iteritems():
             piece_name = chess.PIECE_NAMES[piece_type]
-            whose = 'our' if color == board.turn else 'their'
-            setattr(self, '{}_{}_count'.format(whose, piece_name), count)
+            whose = "our" if color == board.turn else "their"
+            setattr(self, "{}_{}_count".format(whose, piece_name), count)
 
 
-class Attack():
-
+class Attack:
     def __init__(self, attacking, attacked):
         self.attacking = attacking
         self.attacked = attacked
@@ -96,32 +92,40 @@ class Attack():
 
 
 # our attacked / their attacked
-class AttackedPieces():
-
+class AttackedPieces:
     def __init__(self, fen):
         board = chess.Board(fen)
         piece_df = Piece.df(board)
         attack_df = Attack.df(board)
 
-        df = attack_df.merge(piece_df, left_on='attacking', right_index=True)
-        df = df.merge(piece_df, left_on='attacked', right_index=True, suffixes=('_attacking', '_attacked'))
+        df = attack_df.merge(piece_df, left_on="attacking", right_index=True)
+        df = df.merge(
+            piece_df,
+            left_on="attacked",
+            right_index=True,
+            suffixes=("_attacking", "_attacked"),
+        )
 
-        df['is_attacked_by_lower_value'] = df['value_attacked'] > df['value_attacking']
+        df["is_attacked_by_lower_value"] = df["value_attacked"] > df["value_attacking"]
 
-        df = df.groupby('')
+        df = df.groupby("")
 
         # TODO: need to group by.
-        self.our_pieces_attacked_by_lower_value = len(df[
-            (df['color_attacked'] == board.turn) &
-            (df['color_attacking'] != board.turn) &
-            df['is_attacked_by_lower_value']
-        ])
+        self.our_pieces_attacked_by_lower_value = len(
+            df[
+                (df["color_attacked"] == board.turn)
+                & (df["color_attacking"] != board.turn)
+                & df["is_attacked_by_lower_value"]
+            ]
+        )
 
-        import pdb; pdb.set_trace()
+        import pdb
+
+        pdb.set_trace()
 
 
-if __name__ == '__main__':
-    df = pd.read_csv('csvs/lichess/0-00/0.csv')
-    fen = df['fen'][38]
+if __name__ == "__main__":
+    df = pd.read_csv("csvs/lichess/0-00/0.csv")
+    fen = df["fen"][38]
     print(chess.Board(fen))
     AttackedPieces(fen)

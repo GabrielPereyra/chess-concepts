@@ -1,57 +1,58 @@
+import os
+import click
+import pandas as pd
 import subprocess
 from functools import cached_property
 
-import chess
 from features.abstract import Features
+
+
+# TODO: add link to forked version that prints features.
+ETHEREAL_PATH = os.environ.get("ETHEREAL_PATH", "../Ethereal/src/Ethereal")
 
 
 class EtherealEval(Features):
     def __init__(self, fen, p):
-        board = chess.Board(fen)
-        self.turn = board.turn
-
         p.stdin.write("position fen {}\n".format(fen))
         p.stdin.write("go depth 1\n")
 
-        self._eval_features = {}
-        for line in iter(p.stdout.readline, ""):
-            if "bestmove" in line:
-                break
+        p.stdout.readline()  # eval
+        features = eval(p.stdout.readline())
+        p.stdout.readline()  # bestmove
 
-            if str(line).startswith("feature"):
-                self._eval_features = self._parse_features(line)
-                break
+        _features = {}
+        turn = fen.split()[1]
+        for feature, value in features.items():
+            color, name = feature.split("_", 1)
+            if color == turn:
+                _features["our_{}".format(name)] = value
+            else:
+                _features["their_{}".format(name)] = value
+        self._features = _features
 
-    def _parse_features(self, line):
-        features = {f.split("=")[0]: int(f.split("=")[1]) for f in line.split()[1:]}
-        if self.turn == chess.BLACK:
-            new_features = {}
-            for k,v in features.items():
-                # reverse colors
-                k = k.replace("White", "green").replace("black", "White").replace("green", "black")
-                new_features[k] = v
-            return new_features
-        else:
-            return features
+    @classmethod
+    def from_row(cls, row, p):
+        return cls(row.fen, p)
 
-    @cached_property
-    def ethereal_eval_features(self):
-        return self._eval_features
+    @classmethod
+    def from_df(cls, df):
+        p = subprocess.Popen(
+            ETHEREAL_PATH,
+            stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            universal_newlines=True,
+            bufsize=1,
+        )
 
+        feature_rows = []
+        with click.progressbar(tuple(df.itertuples())) as rows:
+            for row in rows:
+                feature_instance = cls.from_row(row, p)
+                feature_rows.append(feature_instance.features())
 
+        p.kill()
+        return pd.DataFrame(feature_rows)
 
-if __name__ == '__main__':
-    ETHEREAL_PATH = "/home/pawel/projects/chesstraining/Ethereal_clone/src/Ethereal"
-    p = subprocess.Popen(
-        ETHEREAL_PATH,
-        stdin=subprocess.PIPE,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
-        universal_newlines=True,
-        bufsize=1,
-    )
-    f = EtherealEval('8/5R2/r4ppk/8/4PKPP/8/8/8 b - - 0 1', p)
-    features = f.features()
-    print(features["ethereal_eval_features"]["ComplexityAdjustmentWhite"])
-    print(features["ethereal_eval_features"]["ComplexityAdjustmentblack"])
-    p.kill()
+    def features(self):
+        return self._features

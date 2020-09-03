@@ -28,7 +28,7 @@ class Features:
             # if the feature class method returns a dictionary
             # explode it to create features from the dict otherwise use atomic values for primitive types
             if isinstance(feature_value, dict):
-                for k,v in feature_value.items():
+                for k, v in feature_value.items():
                     feature_dict[k] = v
             else:
                 feature_dict[feature_name] = feature_value
@@ -48,8 +48,7 @@ class Features:
         return pd.DataFrame(feature_rows)
 
 
-class FeatureList():
-
+class FeatureList:
     def __init__(self, features):
         self.features = features
 
