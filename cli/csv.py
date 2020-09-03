@@ -8,9 +8,10 @@ import chess.engine
 import pandas as pd
 import datetime
 import features
-LICHESS_PGN_NAME = 'lichess_db_standard_rated_{year}-{month:0>2}'
-PGN_PATH = 'pgns/{name}.pgn'
-CSV_PATH = 'csvs/lichess/{name}/'
+
+LICHESS_PGN_NAME = "lichess_db_standard_rated_{year}-{month:0>2}"
+PGN_PATH = "pgns/{name}.pgn"
+CSV_PATH = "csvs/lichess/{name}/"
 FEATURE_CSV_PATH = "csvs/{feature}/{name}/"
 SHARD_SIZE = 100000
 os.makedirs("csvs", exist_ok=True)
@@ -67,6 +68,7 @@ def metrics(score, prev_score, turn):
 def winning_chances(score, prev_score, turn):
     if prev_score is None:
         return {}
+
     score = score.pov(turn)
     prev_score = prev_score.pov(turn)
 
@@ -111,6 +113,11 @@ def game_to_rows(game):
         datetime_parsed = datetime.datetime.strptime(
             datetime_string, "%Y.%m.%d %H:%M:%S"
         )
+        won = (
+            game.headers["Result"] == "1-0"
+            if board.turn
+            else game.headers["Result"] == "0-1"
+        )
 
         move = node.move
         if node.board().is_checkmate():
@@ -121,8 +128,6 @@ def game_to_rows(game):
         # some games don't have complete evals (https://lichess.org/5Bl3kibm)
         if score is None:
             return rows
-
-        # TODO: remove abandoned games.
 
         row = {
             "elo": elo,
@@ -141,6 +146,7 @@ def game_to_rows(game):
             "prev_score": prev_score.pov(board.turn).score(),
             "prev_mate": prev_score.pov(board.turn).mate(),
             "clock": node.clock(),
+            "won": won,
         }
 
         row.update(winning_chances(score, prev_score, board.turn))
@@ -162,7 +168,7 @@ def write_shard(rows, csv_path, shard):
 
 def pgn_to_csv(name):
     pgn_path = PGN_PATH.format(name=name)
-    csv_path = CSV_PATH.format(name=name)
+    csv_path = CSV_PATH.format(name=name.split("_")[-1])  # TODO: fix this.
     os.makedirs(csv_path, exist_ok=True)
     pgn = open(pgn_path)
 
@@ -184,7 +190,7 @@ def pgn_to_csv(name):
 
         if game is None:
             break
-        if game.headers['Termination'] == 'Abandoned':
+        if game.headers["Termination"] == "Abandoned":
             continue
         if game.headers["WhiteElo"] == "?":
             continue
@@ -206,7 +212,7 @@ def pgn_to_csv(name):
 def get_name(name, year, month):
     if name is None:
         if year is None and month is None:
-            raise ValueError('Must specify name or year and month.')
+            raise ValueError("Must specify name or year and month.")
         else:
             return LICHESS_PGN_NAME.format(year=year, month=month)
     else:
@@ -219,9 +225,9 @@ def cli():
 
 
 @cli.command()
-@click.option("--name", help='name of csv to use.')
-@click.option("--year", type=int, help='year of lichess csv to use.')
-@click.option("--month", type=int, help='month of lichess csv to use.')
+@click.option("--name", help="name of csv to use.")
+@click.option("--year", type=int, help="year of lichess csv to use.")
+@click.option("--month", type=int, help="month of lichess csv to use.")
 def pgn(name, year, month):
     """Convert a pgn to csv. Expects a pgn file to exist at pgns/{name}. You can download these from https://database.lichess.org/."""
     name = get_name(name, year, month)
@@ -230,9 +236,9 @@ def pgn(name, year, month):
 
 @cli.command()
 @click.argument("feature_names", nargs=-1)
-@click.option("--name", help='name of csv to use.')
-@click.option("--year", type=int, help='year of lichess csv to use.')
-@click.option("--month", type=int, help='month of lichess csv to use.')
+@click.option("--name", help="name of csv to use.")
+@click.option("--year", type=int, help="year of lichess csv to use.")
+@click.option("--month", type=int, help="month of lichess csv to use.")
 @click.option("--num_shards", type=int, help="number of shards to use.")
 def feature(feature_names, name, year, month, num_shards):
     """
@@ -243,7 +249,7 @@ def feature(feature_names, name, year, month, num_shards):
 
     # TODO: handle case where user passes a lowercase feature name.
 
-    get_name(name, year, month)
+    name = get_name(name, year, month)
 
     path = CSV_PATH.format(name=name)
     if num_shards is None:
