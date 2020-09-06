@@ -1,6 +1,8 @@
 import chess
 import features
 
+import board
+
 
 def test_board_features():
     f = features.Board(chess.STARTING_FEN)
@@ -52,4 +54,5 @@ def test_board_features():
         "their_queens": 1,
         "their_rooks": 2,
         "turn": True,
+        "pawn_structure": board.PawnStructure.NONE,
     }

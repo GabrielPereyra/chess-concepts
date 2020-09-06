@@ -6,9 +6,54 @@ import chess
 import chess.engine
 import features
 import pandas as pd
-from board import Tactic, Threat, CheckmateType
+from board import Tactic, Threat, CheckmateType, PawnStructure
 from features.helpers import square_from_name
 from features.board import GamePhase, PositionOpenness
+
+
+@pytest.mark.parametrize(
+    "fen, expected",
+    [
+        ("8/pp3ppp/2p1p3/8/3P4/8/PPP2PPP/8 w - - 0 1", PawnStructure.CARO),
+        ("8/pp3ppp/2p1p3/8/3P4/4P3/PP3PPP/8 w - - 0 1", PawnStructure.SLAV),
+        (
+            "8/pp3ppp/3pp3/8/4P3/8/PPP2PPP/8 w - - 0 1",
+            PawnStructure.SICILIAN_SCHEVENINGEN,
+        ),
+        ("8/pp2pp1p/3p2p1/8/4P3/8/PPP2PPP/8 w - - 0 1", PawnStructure.SICILIAN_DRAGON),
+        (
+            "8/pp3ppp/3p4/4p3/4P3/8/PPP2PPP/8 w - - 0 1",
+            PawnStructure.SICILIAN_BOLESLAVSKY_HOLE,
+        ),
+        ("8/pp1ppppp/8/8/2P1P3/8/PP3PPP/8 w - - 0 1", PawnStructure.MAROCZY_BIND),
+        ("8/5ppp/pp1pp3/8/2P1P3/8/PP3PPP/8 w - - 0 1", PawnStructure.HEDGEHOG),
+        ("8/pp3ppp/2p5/4p3/2P1P3/8/PP3PPP/8 w - - 0 1", PawnStructure.RAUZER_FORMATION),
+        ("8/pp3ppp/2pp4/8/2P1P3/8/PP3PPP/8 w - - 0 1", PawnStructure.BOLESLAVSKY_WALL),
+        ("8/ppp2ppp/3p4/3Pp3/4P3/8/PPP2PPP/8 w - - 0 1", PawnStructure.D5_CHAIN),
+        ("8/ppp2ppp/4p3/3pP3/3P4/8/PPP2PPP/8 w - - 0 1", PawnStructure.E5_CHAIN),
+        ("8/pp3ppp/3p4/2pP4/4P3/8/PP3PPP/8 w - - 0 1", PawnStructure.MODERN_BENONI),
+        ("8/ppp2ppp/8/8/3P4/8/PP3PPP/8 w - - 0 1", PawnStructure.GIUOCO_PIANO_ISOLANI),
+        (
+            "8/pp3ppp/4p3/8/3P4/8/PP3PPP/8 w - - 0 1",
+            PawnStructure.QUEENS_GAMBIT_ISOLANI,
+        ),
+        ("8/pp3ppp/4p3/8/2PP4/8/P4PPP/8 w - - 0 1", PawnStructure.HANGING_PAWNS),
+        ("8/pp3ppp/2p5/3p4/3P4/4P3/PP3PPP/8 w - - 0 1", PawnStructure.CARLSBAD),
+        ("8/pp3ppp/4p3/2Pp4/3P4/8/PP3PPP/8 w - - 0 1", PawnStructure.PANOV),
+        ("8/ppp3pp/4p3/3p1p2/3P1P2/4P3/PPP3PP/8 w - - 0 1", PawnStructure.STONEWALL),
+        (
+            "8/pp3ppp/3p4/2p1p3/2P1P3/3P4/PP3PPP/8 w - - 0 1",
+            PawnStructure.BOTVINNIK_SYSTEM,
+        ),
+        (
+            "8/pp2pppp/3p4/2p5/4P3/3P4/PPP2PPP/8 w - - 0 1",
+            PawnStructure.CLOSED_SICILIAN,
+        ),
+    ],
+)
+def test_pawn_structure(fen, expected):
+    pawn_structures = features.Board(fen).pawn_structure
+    assert pawn_structures == expected
 
 
 @pytest.mark.parametrize(

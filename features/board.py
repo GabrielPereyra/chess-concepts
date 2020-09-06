@@ -3,8 +3,8 @@ from functools import cached_property
 
 import chess
 
+import board
 from features.abstract import Features
-from features.helpers import count_material
 
 
 class GamePhase(IntEnum):
@@ -21,7 +21,7 @@ class PositionOpenness(IntEnum):
 
 class Board(Features):
     def __init__(self, fen):
-        self.board = chess.Board(fen)
+        self.board = board.AugBoard(fen)
         self.moves = tuple(self.board.legal_moves)
         self.their_board = self.board.copy()
         self.their_board.push(chess.Move.null())
@@ -29,7 +29,7 @@ class Board(Features):
 
     @cached_property
     def turn(self):
-        return self.board.turn
+        return self.board.current_color
 
     @cached_property
     def is_check(self):
@@ -151,27 +151,27 @@ class Board(Features):
 
     @cached_property
     def our_piece_count(self):
-        return chess.popcount(self.board.occupied_co[self.board.turn])
+        return chess.popcount(self.board.occupied_co(self.board.current_color))
 
     @cached_property
     def our_queens(self):
-        return len(self.board.pieces(chess.QUEEN, self.board.turn))
+        return len(self.board.pieces(chess.QUEEN, self.board.current_color))
 
     @cached_property
     def our_rooks(self):
-        return len(self.board.pieces(chess.ROOK, self.board.turn))
+        return len(self.board.pieces(chess.ROOK, self.board.current_color))
 
     @cached_property
     def our_bishops(self):
-        return len(self.board.pieces(chess.BISHOP, self.board.turn))
+        return len(self.board.pieces(chess.BISHOP, self.board.current_color))
 
     @cached_property
     def our_knights(self):
-        return len(self.board.pieces(chess.KNIGHT, self.board.turn))
+        return len(self.board.pieces(chess.KNIGHT, self.board.current_color))
 
     @cached_property
     def our_pawns(self):
-        return len(self.board.pieces(chess.PAWN, self.board.turn))
+        return len(self.board.pieces(chess.PAWN, self.board.current_color))
 
     @cached_property
     def our_non_pawn_pieces(self):
@@ -191,27 +191,27 @@ class Board(Features):
 
     @cached_property
     def their_piece_count(self):
-        return chess.popcount(self.board.occupied_co[not self.board.turn])
+        return chess.popcount(self.board.occupied_co(self.board.other_color))
 
     @cached_property
     def their_queens(self):
-        return len(self.board.pieces(chess.QUEEN, not self.board.turn))
+        return len(self.board.pieces(chess.QUEEN, self.board.other_color))
 
     @cached_property
     def their_rooks(self):
-        return len(self.board.pieces(chess.ROOK, not self.board.turn))
+        return len(self.board.pieces(chess.ROOK, self.board.other_color))
 
     @cached_property
     def their_bishops(self):
-        return len(self.board.pieces(chess.BISHOP, not self.board.turn))
+        return len(self.board.pieces(chess.BISHOP, self.board.other_color))
 
     @cached_property
     def their_knights(self):
-        return len(self.board.pieces(chess.KNIGHT, not self.board.turn))
+        return len(self.board.pieces(chess.KNIGHT, self.board.other_color))
 
     @cached_property
     def their_pawns(self):
-        return len(self.board.pieces(chess.PAWN, not self.board.turn))
+        return len(self.board.pieces(chess.PAWN, self.board.other_color))
 
     @cached_property
     def their_non_pawn_pieces(self):
@@ -235,11 +235,11 @@ class Board(Features):
 
     @cached_property
     def our_material_count(self):
-        return count_material(self.board, self.turn)
+        return self.board.count_material(self.board.current_color)
 
     @cached_property
     def their_material_count(self):
-        return count_material(self.board, not self.turn)
+        return self.board.count_material(self.board.other_color)
 
     @cached_property
     def material_count(self):
@@ -403,3 +403,7 @@ class Board(Features):
             and self.their_bishops == 0
         ):
             return 6  # knights and pawns
+
+    @cached_property
+    def pawn_structure(self):
+        return self.board.pawn_structure()
