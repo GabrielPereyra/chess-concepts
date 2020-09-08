@@ -5,38 +5,7 @@ import datetime
 import pandas as pd
 
 
-CSV_PATH = "csvs/{type}/{name}/"
-
-
-# def get_type_df(name, type, shard, num_shards=None):
-#     path = CSV_PATH.format(type=type, name=name)
-#     if shard:
-#         shards = [shard]
-#     if num_shards is None:
-#         shards = range(len(os.listdir(path)))
-#     else:
-#         shards = range(num_shards)
-#
-#     dfs = []
-#     for shard in shards:
-#         df = pd.read_csv(path + str(shard) + ".csv")
-#         dfs.append(df)
-#
-#     return pd.concat(dfs).reset_index(drop=True)
-#
-#
-# def get_df(name, types, shard=None, num_shards=None):
-#     df = None
-#     for type in types:
-#         type_df = get_type_df(name, type, shard, num_shards)
-#         if df is None:
-#             df = type_df
-#         else:
-#             assert len(df) == len(type_df)  # TODO: check indices match?
-#             df = df.join(type_df)
-#     return df
-
-
+# CSV_PATH = "csvs/{type}/{name}/"
 LICHESS_PGN_NAME = "lichess_db_standard_rated_{year}-{month:0>2}"
 PGN_PATH = "pgns/{name}.pgn"
 CSV_PATH = "csvs/lichess/{name}/"
@@ -44,7 +13,6 @@ FEATURE_CSV_PATH = "csvs/{feature}/{name}/"
 SHARD_SIZE = 100000
 
 
-# TODO: move to utils.
 def metrics(score, prev_score, turn):
     if prev_score is None:
         return {}
@@ -187,12 +155,7 @@ def game_to_rows(game):
     return rows
 
 
-def pgn_to_df(pgn):
-    # pgn_path = PGN_PATH.format(name=name)
-    # csv_path = CSV_PATH.format(name=name.split("_")[-1])  # TODO: fix this.
-    # os.makedirs(csv_path, exist_ok=True)
-    # pgn = open(pgn_path)
-
+def pgn_to_df(pgn, limit=None):
     rows = []
     while True:
         game = chess.pgn.read_game(pgn)
@@ -214,11 +177,13 @@ def pgn_to_df(pgn):
 
         rows.extend(game_to_rows(game))
 
+        if len(rows) >= limit:
+            return pd.DataFrame(rows)[:limit]
+
     return pd.DataFrame(rows)
 
 
-def pgn_to_feature_df(pgn, feature_classes):
-    df = pgn_to_df(pgn)
+def add_features(df, feature_classes):
     for feature_class in feature_classes:
         feature_df = feature_class.from_df(df)
         df = df.join(feature_df)
