@@ -1004,4 +1004,4 @@ def test_features_list():
     df = features.FeatureList(
         [features.Board, features.BestMove, features.BestPV]
     ).from_df(df)
-    assert len(df.columns) == 78
+    assert len(df.columns) == 87

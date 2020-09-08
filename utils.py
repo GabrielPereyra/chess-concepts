@@ -156,10 +156,10 @@ def game_to_rows(game):
     return rows
 
 
-def pgn_to_df(pgn, limit=None):
+def pgn_to_df(pgn, limit):
     rows = []
 
-    with click.progressbar(length=limit, label='Parsing pgn') as bar:
+    with click.progressbar(length=limit, label="Parsing pgn") as bar:
         while True:
             game = chess.pgn.read_game(pgn)
             if game is None:
