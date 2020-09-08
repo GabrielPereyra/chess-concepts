@@ -3,6 +3,7 @@ from typing import Optional, Iterator, Set, Tuple, List, Dict
 from .tactics import Tactic
 from .threats import Threat
 from .mates import CheckmateType
+from .structures import PawnStructure
 
 import chess
 
@@ -88,6 +89,23 @@ class AugBoard:
 
     def occupied_by(self, color: chess.Color) -> chess.SquareSet:
         return chess.SquareSet(self._board.occupied_co[color])
+
+    @property
+    def occupied(self) -> chess.Bitboard:
+        return self._board.occupied
+
+    @property
+    def legal_moves(self) -> chess.LegalMoveGenerator:
+        return self._board.legal_moves
+
+    @property
+    def fullmove_number(self) -> int:
+        return self._board.fullmove_number
+
+    def pieces(
+        self, piece_type: chess.PieceType, color: chess.Color
+    ) -> chess.SquareSet:
+        return self._board.pieces(piece_type, color)
 
     def attacks(self, square: int) -> chess.SquareSet:
         return self._board.attacks(square)
@@ -301,6 +319,22 @@ class AugBoard:
 
     def move_checkmate_types(self, move: chess.Move) -> List[CheckmateType]:
         return self.pv_checkmate_types(pv=[move])
+
+    def _board_contains(self, detectors: Dict, none_value) -> List:
+        detected = set(
+            value for value, detector in detectors.items() if detector(self.fen())
+        )
+        return sorted(detected) if detected else [none_value]
+
+    def _pawn_structures(self) -> List[PawnStructure]:
+        return self._board_contains(PawnStructure.detectors(), PawnStructure.NONE)
+
+    def pawn_structure(self) -> PawnStructure:
+        """
+        The assumption is that when more than one structure is recognized, then the one with
+        the highest integer value amongst them is the most specialized one.
+        """
+        return max(self._pawn_structures())
 
 
 if __name__ == "__main__":

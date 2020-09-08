@@ -6,9 +6,54 @@ import chess
 import chess.engine
 import features
 import pandas as pd
-from board import Tactic, Threat, CheckmateType
+from board import Tactic, Threat, CheckmateType, PawnStructure
 from features.helpers import square_from_name
 from features.board import GamePhase, PositionOpenness
+
+
+@pytest.mark.parametrize(
+    "fen, expected",
+    [
+        ("8/pp3ppp/2p1p3/8/3P4/8/PPP2PPP/8 w - - 0 1", PawnStructure.CARO),
+        ("8/pp3ppp/2p1p3/8/3P4/4P3/PP3PPP/8 w - - 0 1", PawnStructure.SLAV),
+        (
+            "8/pp3ppp/3pp3/8/4P3/8/PPP2PPP/8 w - - 0 1",
+            PawnStructure.SICILIAN_SCHEVENINGEN,
+        ),
+        ("8/pp2pp1p/3p2p1/8/4P3/8/PPP2PPP/8 w - - 0 1", PawnStructure.SICILIAN_DRAGON),
+        (
+            "8/pp3ppp/3p4/4p3/4P3/8/PPP2PPP/8 w - - 0 1",
+            PawnStructure.SICILIAN_BOLESLAVSKY_HOLE,
+        ),
+        ("8/pp1ppppp/8/8/2P1P3/8/PP3PPP/8 w - - 0 1", PawnStructure.MAROCZY_BIND),
+        ("8/5ppp/pp1pp3/8/2P1P3/8/PP3PPP/8 w - - 0 1", PawnStructure.HEDGEHOG),
+        ("8/pp3ppp/2p5/4p3/2P1P3/8/PP3PPP/8 w - - 0 1", PawnStructure.RAUZER_FORMATION),
+        ("8/pp3ppp/2pp4/8/2P1P3/8/PP3PPP/8 w - - 0 1", PawnStructure.BOLESLAVSKY_WALL),
+        ("8/ppp2ppp/3p4/3Pp3/4P3/8/PPP2PPP/8 w - - 0 1", PawnStructure.D5_CHAIN),
+        ("8/ppp2ppp/4p3/3pP3/3P4/8/PPP2PPP/8 w - - 0 1", PawnStructure.E5_CHAIN),
+        ("8/pp3ppp/3p4/2pP4/4P3/8/PP3PPP/8 w - - 0 1", PawnStructure.MODERN_BENONI),
+        ("8/ppp2ppp/8/8/3P4/8/PP3PPP/8 w - - 0 1", PawnStructure.GIUOCO_PIANO_ISOLANI),
+        (
+            "8/pp3ppp/4p3/8/3P4/8/PP3PPP/8 w - - 0 1",
+            PawnStructure.QUEENS_GAMBIT_ISOLANI,
+        ),
+        ("8/pp3ppp/4p3/8/2PP4/8/P4PPP/8 w - - 0 1", PawnStructure.HANGING_PAWNS),
+        ("8/pp3ppp/2p5/3p4/3P4/4P3/PP3PPP/8 w - - 0 1", PawnStructure.CARLSBAD),
+        ("8/pp3ppp/4p3/2Pp4/3P4/8/PP3PPP/8 w - - 0 1", PawnStructure.PANOV),
+        ("8/ppp3pp/4p3/3p1p2/3P1P2/4P3/PPP3PP/8 w - - 0 1", PawnStructure.STONEWALL),
+        (
+            "8/pp3ppp/3p4/2p1p3/2P1P3/3P4/PP3PPP/8 w - - 0 1",
+            PawnStructure.BOTVINNIK_SYSTEM,
+        ),
+        (
+            "8/pp2pppp/3p4/2p5/4P3/3P4/PPP2PPP/8 w - - 0 1",
+            PawnStructure.CLOSED_SICILIAN,
+        ),
+    ],
+)
+def test_pawn_structure(fen, expected):
+    pawn_structures = features.Board(fen).pawn_structure
+    assert pawn_structures == expected
 
 
 @pytest.mark.parametrize(
@@ -790,6 +835,114 @@ def test_sacrifice(fen, pv, expected_contains_tactic, expected_is_first_move_tac
     assert (
         Tactic.SACRIFICE in features.BestPV(fen, pv)._best_pv_tactics()
     ) == expected_contains_tactic
+
+
+@pytest.mark.parametrize(
+    "fen, move, expected",
+    [
+        # https://lichess.org/analysis/rnbqkbnr/ppp2ppp/3p4/4p3/2B1P3/8/PPPP1PPP/RNBQK1NR_w_KQkq_-_0_1
+        (
+            "rnbqkbnr/ppp2ppp/3p4/4p3/2B1P3/8/PPPP1PPP/RNBQK1NR w KQkq - 0 1",
+            "d1h5",
+            True,
+        ),
+        # https://lichess.org/analysis/r2qknnr/pppbbppp/3p4/4p3/2B1P3/5N2/PPPP1PPP/RNBQK2R_w_KQkq_-_0_1
+        (
+            "r2qknnr/pppbbppp/3p4/4p3/2B1P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 0 1",
+            "f3g5",
+            True,
+        ),
+        # https://lichess.org/analysis/rnbqkbnr/ppp2ppp/3p4/4p3/2B1P3/8/PPPP1PPP/RNBQK1NR_w_KQkq_-_0_1
+        (
+            "rnbqkbnr/ppp2ppp/3p4/4p3/2B1P3/8/PPPP1PPP/RNBQK1NR w KQkq - 0 1",
+            "d1e2",
+            False,
+        ),
+    ],
+)
+def test_mate_threat(fen, move, expected):
+    assert (
+        Threat.MATE in features.BestMove(fen, move)._best_move_threats()
+    ) == expected
+
+
+@pytest.mark.parametrize(
+    "fen, move, expected",
+    [
+        # https://lichess.org/analysis/rnbqkb1r/ppp2ppp/3p4/4p3/4n3/5N2/PPPP1PPP/RNBQKB1R_w_KQkq_-_0_1
+        (
+            "rnbqkb1r/ppp2ppp/3p4/4p3/4n3/5N2/PPPP1PPP/RNBQKB1R w KQkq - 0 1",
+            "c2c3",
+            True,
+        ),
+        # https://lichess.org/analysis/rnb1kb1r/ppp2ppp/3p1n2/4pq2/8/2N5/PPPP1PPP/RNBQKB1R_w_KQkq_-_0_1
+        (
+            "rnb1kb1r/ppp2ppp/3p1n2/4pq2/8/2N5/PPPP1PPP/RNBQKB1R w KQkq - 0 1",
+            "c3b5",
+            True,
+        ),
+        # https://lichess.org/analysis/r2qknnr/pppbbppp/3p4/4p3/2B1P3/5N2/PPPP1PPP/RNBQK2R_w_KQkq_-_0_1
+        (
+            "r2qknnr/pppbbppp/3p4/4p3/2B1P3/5N2/PPPP1PPP/RNBQK2R w KQkq - 0 1",
+            "f3g5",
+            True,
+        ),
+        # https://lichess.org/analysis/rnbqkbnr/ppp2ppp/3p4/4p3/2B1P3/8/PPPP1PPP/RNBQK1NR_w_KQkq_-_0_1
+        (
+            "rnbqkbnr/ppp2ppp/3p4/4p3/2B1P3/8/PPPP1PPP/RNBQK1NR w KQkq - 0 1",
+            "d1h5",
+            False,
+        ),
+        # https://lichess.org/analysis/rnbqkbnr/ppp2ppp/3p4/4p3/2B1P3/8/PPPP1PPP/RNBQK1NR_w_KQkq_-_0_1
+        (
+            "rnbqkbnr/ppp2ppp/3p4/4p3/2B1P3/8/PPPP1PPP/RNBQK1NR w KQkq - 0 1",
+            "d1e2",
+            False,
+        ),
+    ],
+)
+def test_fork_threat(fen, move, expected):
+    assert (
+        Threat.FORK in features.BestMove(fen, move)._best_move_threats()
+    ) == expected
+
+
+@pytest.mark.parametrize(
+    "fen, move, expected",
+    [
+        # https://lichess.org/editor/rnb1kbnr/ppp1pppp/8/3q4/8/8/PPPP1PPP/RNBQKBNR_w_KQkq_-_0_1
+        ("rnb1kbnr/ppp1pppp/8/3q4/8/8/PPPP1PPP/RNBQKBNR w KQkq - 0 1", "b1c3", True),
+        # https://lichess.org/editor/rnb1kbnr/ppp2ppp/4p3/3q4/8/8/PPPP1PPP/RNBQKBNR_w_KQkq_-_0_1
+        ("rnb1kbnr/ppp2ppp/4p3/3q4/8/8/PPPP1PPP/RNBQKBNR w KQkq - 0 1", "b1c3", False),
+        # https://lichess.org/editor/rnb1kbnr/ppp1pppp/8/3q4/8/8/PPPP1PPP/RNBQKBNR_w_KQkq_-_0_1
+        ("rnb1kbnr/ppp1pppp/8/3q4/8/8/PPPP1PPP/RNBQKBNR w KQkq - 0 1", "b1a3", False),
+    ],
+)
+def test_hanging_piece_capture_threat(fen, move, expected):
+    assert (
+        Threat.HANGING_PIECE_CAPTURE
+        in features.BestMove(fen, move)._best_move_threats()
+    ) == expected
+
+
+@pytest.mark.parametrize(
+    "fen, move, expected",
+    [
+        # https://lichess.org/editor/rnb1kbnr/ppp1pppp/8/3q4/8/8/PPPP1PPP/RNBQKBNR_w_KQkq_-_0_1
+        ("rnb1kbnr/ppp1pppp/8/3q4/8/8/PPPP1PPP/RNBQKBNR w KQkq - 0 1", "b1c3", True),
+        # https://lichess.org/editor/rnb1kbnr/ppp2ppp/4p3/3q4/8/8/PPPP1PPP/RNBQKBNR_w_KQkq_-_0_1
+        ("rnb1kbnr/ppp2ppp/4p3/3q4/8/8/PPPP1PPP/RNBQKBNR w KQkq - 0 1", "b1c3", True),
+        # https://lichess.org/editor/rn1qkbnr/ppp1pppp/8/3b3Q/8/8/PPPP1PPP/RNB1KBNR_w_KQkq_-_0_1
+        ("rn1qkbnr/ppp1pppp/8/3b3Q/8/8/PPPP1PPP/RNB1KBNR w KQkq - 0 1", "b1c3", True),
+        # https://lichess.org/editor/rn1qkbnr/ppp2ppp/4p3/3b4/8/8/PPPP1PPP/RNBQKBNR_w_KQkq_-_0_1
+        ("rn1qkbnr/ppp2ppp/4p3/3b4/8/8/PPPP1PPP/RNBQKBNR w KQkq - 0 1", "b1c3", False),
+    ],
+)
+def test_material_gain_capture_threat(fen, move, expected):
+    assert (
+        Threat.MATERIAL_GAIN_CAPTURE
+        in features.BestMove(fen, move)._best_move_threats()
+    ) == expected
 
 
 @pytest.mark.parametrize(

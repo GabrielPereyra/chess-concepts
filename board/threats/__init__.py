@@ -5,6 +5,7 @@ import chess
 
 from .capture import creates_hanging_piece_threat_capture, creates_material_gain_capture
 from .mate import creates_mate_threat
+from .fork import creates_fork_threat
 
 
 # TODO: consider refactoring to enum.IntFlag if we want them to behave like bit flags
@@ -14,6 +15,7 @@ class Threat(IntEnum):
     MATE = 1
     HANGING_PIECE_CAPTURE = 2
     MATERIAL_GAIN_CAPTURE = 3
+    FORK = 4
 
     @classmethod
     def detectors(cls) -> Dict["Threat", Callable[[str, chess.Move], bool]]:
@@ -21,6 +23,7 @@ class Threat(IntEnum):
             cls.MATE: creates_mate_threat,
             cls.HANGING_PIECE_CAPTURE: creates_hanging_piece_threat_capture,
             cls.MATERIAL_GAIN_CAPTURE: creates_material_gain_capture,
+            cls.FORK: creates_fork_threat,
         }
 
     @classmethod
