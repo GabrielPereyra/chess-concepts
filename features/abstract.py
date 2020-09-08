@@ -41,7 +41,7 @@ class Features:
     @classmethod
     def from_df(cls, df):
         feature_rows = []
-        with click.progressbar(tuple(df.itertuples())) as rows:
+        with click.progressbar(tuple(df.itertuples()), label=cls.__name__) as rows:
             for row in rows:
                 feature_instance = cls.from_row(row)
                 feature_rows.append(feature_instance.features())

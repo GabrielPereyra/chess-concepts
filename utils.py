@@ -1,4 +1,5 @@
 import math
+import click
 import chess
 import chess.pgn
 import datetime
@@ -157,28 +158,32 @@ def game_to_rows(game):
 
 def pgn_to_df(pgn, limit=None):
     rows = []
-    while True:
-        game = chess.pgn.read_game(pgn)
-        if game is None:
-            break
 
-        mainline = tuple(game.mainline())
-        if not mainline or mainline[0].eval() is None:
-            continue
+    with click.progressbar(length=limit, label='Parsing pgn') as bar:
+        while True:
+            game = chess.pgn.read_game(pgn)
+            if game is None:
+                break
 
-        if game is None:
-            break
-        if game.headers["Termination"] == "Abandoned":
-            continue
-        if game.headers["WhiteElo"] == "?":
-            continue
-        if game.headers["BlackElo"] == "?":
-            continue
+            mainline = tuple(game.mainline())
+            if not mainline or mainline[0].eval() is None:
+                continue
 
-        rows.extend(game_to_rows(game))
+            if game is None:
+                break
+            if game.headers["Termination"] == "Abandoned":
+                continue
+            if game.headers["WhiteElo"] == "?":
+                continue
+            if game.headers["BlackElo"] == "?":
+                continue
 
-        if len(rows) >= limit:
-            return pd.DataFrame(rows)[:limit]
+            rows.extend(game_to_rows(game))
+
+            if limit and len(rows) >= limit:
+                return pd.DataFrame(rows)[:limit]
+
+            bar.update(len(rows))
 
     return pd.DataFrame(rows)
 
