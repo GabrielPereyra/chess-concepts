@@ -18,6 +18,7 @@ os.makedirs("csvs", exist_ok=True)
 os.makedirs("pgns", exist_ok=True)
 
 
+# TODO: move to utils.
 def metrics(score, prev_score, turn):
     if prev_score is None:
         return {}
