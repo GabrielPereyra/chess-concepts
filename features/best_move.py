@@ -30,6 +30,14 @@ class BestMove(Features):
         return self.aug.is_en_passant(self.move)
 
     @cached_property
+    def best_move_is_castling(self):
+        return self.aug.is_castling(self.move)
+
+    @cached_property
+    def best_move_is_underpromotion(self):
+        return self.aug.is_underpromotion(self.move)
+
+    @cached_property
     def best_move_is_promotion(self):
         return bool(self.move.promotion)
 

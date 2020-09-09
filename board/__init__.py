@@ -69,6 +69,13 @@ class AugBoard:
     def is_en_passant(self, move: chess.Move) -> bool:
         return self._board.is_en_passant(move)
 
+    @staticmethod
+    def is_underpromotion(move: chess.Move) -> bool:
+        return move.promotion is not None and move.promotion != chess.QUEEN
+
+    def is_castling(self, move: chess.Move) -> bool:
+        return self._board.is_castling(move)
+
     def is_capture(self, move: chess.Move) -> bool:
         return self._board.is_capture(move)
 
