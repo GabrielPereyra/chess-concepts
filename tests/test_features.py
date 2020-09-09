@@ -910,6 +910,36 @@ def test_fork_threat(fen, move, expected):
 @pytest.mark.parametrize(
     "fen, move, expected",
     [
+        # https://lichess.org/analysis/3rr1k1/pp2bpp1/2p4p/3p2q1/8/P3PPB1/1PP1QP1P/1K1R3R_w_-_-_0_1
+        ("3rr1k1/pp2bpp1/2p4p/3p2q1/8/P3PPB1/1PP1QP1P/1K1R3R w - - 0 1", "h1g1", True),
+        # https://lichess.org/analysis/3rr1k1/pp2bpp1/2p4p/3p2q1/8/P3PPB1/1PP1QP1P/1K1R3R_w_-_-_0_1
+        ("3rr1k1/pp2bpp1/2p4p/3p2q1/8/P3PPB1/1PP1QP1P/1K1R3R w - - 0 1", "h1f1", False),
+    ],
+)
+def test_discovered_attack_threat(fen, move, expected):
+    assert (
+        Threat.DISCOVERED_ATTACK in features.BestMove(fen, move)._best_move_threats()
+    ) == expected
+
+
+@pytest.mark.parametrize(
+    "fen, move, expected",
+    [
+        # https://lichess.org/analysis/8/3qk3/8/8/4KR2/5Q1b/8/8_b_-_-_0_1
+        ("8/3qk3/8/8/4KR2/5Q1b/8/8 b - - 0 1", "h3e6", True),
+        # https://lichess.org/analysis/8/3qk3/8/8/4KR2/5Q1b/8/8_b_-_-_0_1
+        ("8/3qk3/8/8/4KR2/5Q1b/8/8 b - - 0 1", "h3f1", False),
+    ],
+)
+def test_skewer_threat(fen, move, expected):
+    assert (
+        Threat.SKEWER in features.BestMove(fen, move)._best_move_threats()
+    ) == expected
+
+
+@pytest.mark.parametrize(
+    "fen, move, expected",
+    [
         # https://lichess.org/editor/rnb1kbnr/ppp1pppp/8/3q4/8/8/PPPP1PPP/RNBQKBNR_w_KQkq_-_0_1
         ("rnb1kbnr/ppp1pppp/8/3q4/8/8/PPPP1PPP/RNBQKBNR w KQkq - 0 1", "b1c3", True),
         # https://lichess.org/editor/rnb1kbnr/ppp2ppp/4p3/3q4/8/8/PPPP1PPP/RNBQKBNR_w_KQkq_-_0_1
