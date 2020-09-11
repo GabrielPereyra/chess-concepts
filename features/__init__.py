@@ -1,4 +1,5 @@
 from features.best_move import BestMove
+from features.user_move import UserMove
 from features.best_pv import BestPV
 from features.board import Board
 from features.checkmate import Checkmate
