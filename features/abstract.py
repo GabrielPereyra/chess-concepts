@@ -21,7 +21,10 @@ class Features:
     def feature_names(cls):
         return [attr for attr in dir(cls) if _is_feature(attr)]
 
-    def features(self):
+    def features(self, prefix=None):
+        def name_to_key(name):
+            return name if prefix is None else "%s_%s" % (prefix, name)
+
         feature_dict = {}
         for feature_name in self.feature_names():
             feature_value = getattr(self, feature_name)
@@ -29,9 +32,9 @@ class Features:
             # explode it to create features from the dict otherwise use atomic values for primitive types
             if isinstance(feature_value, dict):
                 for k, v in feature_value.items():
-                    feature_dict[k] = v
+                    feature_dict[name_to_key(k)] = v
             else:
-                feature_dict[feature_name] = feature_value
+                feature_dict[name_to_key(feature_name)] = feature_value
         return feature_dict
 
     @classmethod
