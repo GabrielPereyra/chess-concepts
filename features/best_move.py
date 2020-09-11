@@ -141,10 +141,10 @@ class BestMove(Features):
     def best_move_tactic(self):
         return self._best_move_tactics()[0]
 
-    def _best_move_threats(self):
-        return self.aug.move_threats(self.move)
+    # def _best_move_threats(self):
+    #     return self.aug.move_threats(self.move)
 
     # TODO: consider changing return type so it can handle multiple tactics
-    @cached_property
-    def best_move_threat(self):
-        return self._best_move_threats()[0]
+    # @cached_property
+    # def best_move_threat(self):
+    #     return self._best_move_threats()[0]

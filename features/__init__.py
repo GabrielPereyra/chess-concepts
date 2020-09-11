@@ -8,3 +8,4 @@ from features.clock import Clock
 from features.opening import Opening
 from features.abstract import FeatureList
 from features.ethereal import EtherealEval
+from features.difficulty import Difficulty
