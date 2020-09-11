@@ -99,6 +99,7 @@ def winning_chances(score, prev_score, turn):
 
 def game_to_rows(game):
     rows = []
+    prev_fen = None
     prev_move = None
     prev_score = chess.engine.PovScore(chess.engine.Cp(0), chess.WHITE)
     board = chess.Board()
@@ -136,6 +137,7 @@ def game_to_rows(game):
             "time_control_string": game.headers["TimeControl"],
             "fen": board.fen(),
             "move": move.uci(),
+            "prev_fen": prev_fen,
             "prev_move": prev_move,
             "score": score.pov(board.turn).score(),
             "mate": score.pov(board.turn).mate(),
@@ -150,6 +152,7 @@ def game_to_rows(game):
         rows.append(row)
         board.push(move)
 
+        prev_fen = board.fen()
         prev_move = move.uci()
         prev_score = score
 
