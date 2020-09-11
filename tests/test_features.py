@@ -381,7 +381,7 @@ def test_mate_with_king_bishop_knight(fen, pv, expected):
 )
 def test_fork(fen, pv, expected_contains_tactic, expected_is_first_move_tactic):
     assert (
-        Tactic.FORK in features.BestMove(fen, pv[0])._best_move_tactics()
+        Tactic.FORK in features.BestMove(fen, pv[0])._tactics()
     ) == expected_is_first_move_tactic
     assert (
         Tactic.FORK in features.BestPV(fen, pv)._best_pv_tactics()
@@ -575,7 +575,7 @@ def test_discovered_attack(
     fen, pv, expected_contains_tactic, expected_is_first_move_tactic
 ):
     assert (
-        Tactic.DISCOVERED_ATTACK in features.BestMove(fen, pv[0])._best_move_tactics()
+        Tactic.DISCOVERED_ATTACK in features.BestMove(fen, pv[0])._tactics()
     ) == expected_is_first_move_tactic
     assert (
         Tactic.DISCOVERED_ATTACK in features.BestPV(fen, pv)._best_pv_tactics()
@@ -729,7 +729,7 @@ def test_discovered_attack(
 )
 def test_skewer(fen, pv, expected_contains_tactic, expected_is_first_move_tactic):
     assert (
-        Tactic.SKEWER in features.BestMove(fen, pv[0])._best_move_tactics()
+        Tactic.SKEWER in features.BestMove(fen, pv[0])._tactics()
     ) == expected_is_first_move_tactic
     assert (
         Tactic.SKEWER in features.BestPV(fen, pv)._best_pv_tactics()
@@ -781,7 +781,7 @@ def test_skewer(fen, pv, expected_contains_tactic, expected_is_first_move_tactic
 )
 def test_pin(fen, pv, expected_contains_tactic, expected_is_first_move_tactic):
     assert (
-        Tactic.PIN in features.BestMove(fen, pv[0])._best_move_tactics()
+        Tactic.PIN in features.BestMove(fen, pv[0])._tactics()
     ) == expected_is_first_move_tactic
     assert (
         Tactic.PIN in features.BestPV(fen, pv)._best_pv_tactics()
@@ -830,7 +830,7 @@ def test_pin(fen, pv, expected_contains_tactic, expected_is_first_move_tactic):
 )
 def test_sacrifice(fen, pv, expected_contains_tactic, expected_is_first_move_tactic):
     assert (
-        Tactic.SACRIFICE in features.BestMove(fen, pv[0])._best_move_tactics()
+        Tactic.SACRIFICE in features.BestMove(fen, pv[0])._tactics()
     ) == expected_is_first_move_tactic
     assert (
         Tactic.SACRIFICE in features.BestPV(fen, pv)._best_pv_tactics()
@@ -861,9 +861,7 @@ def test_sacrifice(fen, pv, expected_contains_tactic, expected_is_first_move_tac
     ],
 )
 def test_mate_threat(fen, move, expected):
-    assert (
-        Threat.MATE in features.BestMove(fen, move)._best_move_threats()
-    ) == expected
+    assert (Threat.MATE in features.BestMove(fen, move)._threats()) == expected
 
 
 @pytest.mark.parametrize(
@@ -902,9 +900,7 @@ def test_mate_threat(fen, move, expected):
     ],
 )
 def test_fork_threat(fen, move, expected):
-    assert (
-        Threat.FORK in features.BestMove(fen, move)._best_move_threats()
-    ) == expected
+    assert (Threat.FORK in features.BestMove(fen, move)._threats()) == expected
 
 
 @pytest.mark.parametrize(
@@ -918,7 +914,7 @@ def test_fork_threat(fen, move, expected):
 )
 def test_discovered_attack_threat(fen, move, expected):
     assert (
-        Threat.DISCOVERED_ATTACK in features.BestMove(fen, move)._best_move_threats()
+        Threat.DISCOVERED_ATTACK in features.BestMove(fen, move)._threats()
     ) == expected
 
 
@@ -932,9 +928,7 @@ def test_discovered_attack_threat(fen, move, expected):
     ],
 )
 def test_skewer_threat(fen, move, expected):
-    assert (
-        Threat.SKEWER in features.BestMove(fen, move)._best_move_threats()
-    ) == expected
+    assert (Threat.SKEWER in features.BestMove(fen, move)._threats()) == expected
 
 
 @pytest.mark.parametrize(
@@ -950,8 +944,7 @@ def test_skewer_threat(fen, move, expected):
 )
 def test_hanging_piece_capture_threat(fen, move, expected):
     assert (
-        Threat.HANGING_PIECE_CAPTURE
-        in features.BestMove(fen, move)._best_move_threats()
+        Threat.HANGING_PIECE_CAPTURE in features.BestMove(fen, move)._threats()
     ) == expected
 
 
@@ -970,8 +963,7 @@ def test_hanging_piece_capture_threat(fen, move, expected):
 )
 def test_material_gain_capture_threat(fen, move, expected):
     assert (
-        Threat.MATERIAL_GAIN_CAPTURE
-        in features.BestMove(fen, move)._best_move_threats()
+        Threat.MATERIAL_GAIN_CAPTURE in features.BestMove(fen, move)._threats()
     ) == expected
 
 
