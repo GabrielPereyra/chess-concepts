@@ -60,7 +60,7 @@ def test_best_move_features():
     ],
 )
 def test_best_move_is_castling(fen, move, expected):
-    assert features.BestMove(fen, move).best_move_is_castling == expected
+    assert features.BestMove(fen, move).is_castling == expected
 
 
 @pytest.mark.parametrize(
@@ -73,7 +73,7 @@ def test_best_move_is_castling(fen, move, expected):
     ],
 )
 def test_best_move_is_en_passant(fen, move, expected):
-    assert features.BestMove(fen, move).best_move_is_en_passant == expected
+    assert features.BestMove(fen, move).is_en_passant == expected
 
 
 @pytest.mark.parametrize(
@@ -88,4 +88,4 @@ def test_best_move_is_en_passant(fen, move, expected):
     ],
 )
 def test_best_move_is_underpromotion(fen, move, expected):
-    assert features.BestMove(fen, move).best_move_is_underpromotion == expected
+    assert features.BestMove(fen, move).is_underpromotion == expected
