@@ -102,6 +102,7 @@ def game_to_rows(game):
     prev_fen = None
     prev_move = None
     prev_score = chess.engine.PovScore(chess.engine.Cp(0), chess.WHITE)
+    prev_move_evaluation_type = None
     board = chess.Board()
     for node in game.mainline():
         username = game.headers["White"] if board.turn else game.headers["Black"]
@@ -143,6 +144,7 @@ def game_to_rows(game):
             "mate": score.pov(board.turn).mate(),
             "prev_score": prev_score.pov(board.turn).score(),
             "prev_mate": prev_score.pov(board.turn).mate(),
+            "prev_move_evaluation_type": prev_move_evaluation_type,
             "clock": node.clock(),
             "won": won,
         }
@@ -155,6 +157,7 @@ def game_to_rows(game):
         prev_fen = board.fen()
         prev_move = move.uci()
         prev_score = score
+        prev_move_evaluation_type = row['move_evaluation_type']
 
     return rows
 
