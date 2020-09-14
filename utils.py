@@ -6,14 +6,6 @@ import datetime
 import pandas as pd
 
 
-# CSV_PATH = "csvs/{type}/{name}/"
-LICHESS_PGN_NAME = "lichess_db_standard_rated_{year}-{month:0>2}"
-PGN_PATH = "pgns/{name}.pgn"
-CSV_PATH = "csvs/lichess/{name}/"
-FEATURE_CSV_PATH = "csvs/{feature}/{name}/"
-SHARD_SIZE = 100000
-
-
 def metrics(score, prev_score, turn):
     if prev_score is None:
         return {}
@@ -197,5 +189,10 @@ def pgn_to_df(pgn, limit):
 def add_features(df, feature_classes):
     for feature_class in feature_classes:
         feature_df = feature_class.from_df(df)
+
+        # drop overlapping cols
+        left = set(df.columns)
+        right = set(feature_df.columns)
+        df = df.drop(left & right, axis=1)
         df = df.join(feature_df)
     return df
