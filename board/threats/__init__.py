@@ -47,11 +47,11 @@ class Threat(IntEnum):
             cls.MATE: creates_mate_threat,
             cls.HANGING_PIECE_CAPTURE: creates_hanging_piece_threat_capture,
             cls.MATERIAL_GAIN_CAPTURE: creates_material_gain_capture,
-            cls.FORK: make_tactic_threat_detector(board.Tactic.FORK),
-            cls.DISCOVERED_ATTACK: make_tactic_threat_detector(
-                board.Tactic.DISCOVERED_ATTACK
-            ),
-            cls.SKEWER: make_tactic_threat_detector(board.Tactic.SKEWER),
+            # cls.FORK: make_tactic_threat_detector(board.Tactic.FORK),
+            # cls.DISCOVERED_ATTACK: make_tactic_threat_detector(
+            #     board.Tactic.DISCOVERED_ATTACK
+            # ),
+            # cls.SKEWER: make_tactic_threat_detector(board.Tactic.SKEWER),
         }
 
     @classmethod
