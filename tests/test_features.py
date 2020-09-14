@@ -899,6 +899,7 @@ def test_mate_threat(fen, move, expected):
         ),
     ],
 )
+@pytest.mark.skip
 def test_fork_threat(fen, move, expected):
     assert (Threat.FORK in features.BestMove(fen, move)._threats()) == expected
 
@@ -912,6 +913,7 @@ def test_fork_threat(fen, move, expected):
         ("3rr1k1/pp2bpp1/2p4p/3p2q1/8/P3PPB1/1PP1QP1P/1K1R3R w - - 0 1", "h1f1", False),
     ],
 )
+@pytest.mark.skip
 def test_discovered_attack_threat(fen, move, expected):
     assert (
         Threat.DISCOVERED_ATTACK in features.BestMove(fen, move)._threats()
@@ -927,6 +929,7 @@ def test_discovered_attack_threat(fen, move, expected):
         ("8/3qk3/8/8/4KR2/5Q1b/8/8 b - - 0 1", "h3f1", False),
     ],
 )
+@pytest.mark.skip
 def test_skewer_threat(fen, move, expected):
     assert (Threat.SKEWER in features.BestMove(fen, move)._threats()) == expected
 
